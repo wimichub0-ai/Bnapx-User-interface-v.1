@@ -1,50 +1,32 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import dynamic from "next/dynamic";
-import { supabase } from "@/lib/supabaseClient";
-
-const TabBar = dynamic(() => import("@/components/TabBar"), { ssr: false });
-
-export default function Page() {
-  const [loading, setLoading] = useState(true);
-  const [session, setSession] = useState(null);
-
-  useEffect(() => {
-    async function load() {
-      const { data } = await supabase.auth.getSession();
-      setSession(data.session ?? null);
-      setLoading(false);
-    }
-    load();
-
-    // Keep in sync if auth state changes
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
-      setSession(s);
-    });
-    return () => sub.subscription.unsubscribe();
-  }, []);
-
-  if (loading) return null; // or a small spinner
-
-  return session ? <Home /> : <Landing />;
-}
-
 /* ---------- LOGGED-IN HOME (brand UI) ---------- */
 function Home() {
+  const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+    async function loadUser() {
+      const { data } = await supabase.auth.getUser();
+      if (data?.user) {
+        // Try profile name first (if you store it in metadata), else email
+        const metaName = data.user.user_metadata?.full_name || data.user.user_metadata?.username;
+        setUserName(metaName || data.user.email || "Trader");
+      }
+    }
+    loadUser();
+  }, []);
+
   return (
-    <main className="home container">
+    <main className="container">
+      {/* Hero */}
       <section className="home-hero">
         <div className="hero-top">
           <div className="hello">
-            <div className="hello-title">Hi Michael muta</div>
+            <div className="hello-title">Hi {userName}</div>
             <div className="hello-sub">What are you trading today?</div>
           </div>
           <div className="bell" aria-label="Notifications">🔔</div>
         </div>
 
+        {/* Wallet */}
         <div className="wallet">
           <div className="wallet-row">
             <div className="wallet-title">Wallet Balance</div>
@@ -57,28 +39,18 @@ function Home() {
         </div>
       </section>
 
+      {/* Quick actions */}
       <section className="home-section">
         <h3 className="section-title">Quick action</h3>
         <div className="tiles">
-          <Link href="/trade?tab=sell" className="tile blue">
-            <Image src="/icons/usdt.png" alt="Sell Crypto" width={60} height={60} priority />
-            <span>Sell Crypto</span>
-          </Link>
-          <Link href="/trade?tab=buy" className="tile cyan">
-            <Image src="/icons/btc.png" alt="Buy Crypto" width={60} height={60} priority />
-            <span>Buy Crypto</span>
-          </Link>
-          <Link href="/trade?tab=giftcard" className="tile lilac">
-            <Image src="/icons/itunes.png" alt="Sell Giftcard" width={60} height={60} />
-            <span>Sell Giftcard</span>
-          </Link>
-          <div className="tile purple disabled" title="Coming soon">
-            <Image src="/icons/gift.png" alt="Send Gift (soon)" width={60} height={60} />
-            <span>Send Gift</span>
-          </div>
+          <CryptoAction type="usdt"  label="Sell Crypto"   href="/trade?tab=sell" />
+          <CryptoAction type="btc"   label="Buy Crypto"    href="/trade?tab=buy" />
+          <CryptoAction type="itunes"label="Sell Giftcard" href="/trade?tab=giftcard" />
+          <CryptoAction type="gift"  label="Send Gift"     href="/send-gift" />
         </div>
       </section>
 
+      {/* Promo */}
       <section className="home-section">
         <h3 className="section-title">Promo/Ad</h3>
         <div className="promo">
@@ -95,25 +67,3 @@ function Home() {
   );
 }
 
-/* ---------- LOGGED-OUT LANDING (your original) ---------- */
-function Landing() {
-  return (
-    <main>
-      <div className="header-grad">
-        <img className="logo" src="/logo-blue.png" alt="BnapX" />
-        <h2>Welcome to BnapX</h2>
-        <p className="small">Start by signing in or creating an account</p>
-      </div>
-      <div className="container card">
-        <div style={{ display: "flex", gap: 10 }}>
-          <Link className="btn" href="/auth/signup" style={{ textAlign: "center", paddingTop: 12 }}>
-            Create account
-          </Link>
-          <Link className="btn" href="/auth/login" style={{ textAlign: "center", paddingTop: 12 }}>
-            Login
-          </Link>
-        </div>
-      </div>
-    </main>
-  );
-}

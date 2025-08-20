@@ -1,8 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { supabase } from '../../lib/supabaseClient';
-
+import { supabase } from '@/lib/supabaseClient';
 export default function Signup(){
   const [first,setFirst]=useState('');const [last,setLast]=useState('');const [username,setUsername]=useState('');
   const [email,setEmail]=useState('');const [phone,setPhone]=useState('');const [promo,setPromo]=useState('');

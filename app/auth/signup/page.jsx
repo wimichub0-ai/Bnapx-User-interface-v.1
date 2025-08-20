@@ -26,7 +26,8 @@ export default function Signup(){
     if(user){
       await supabase.from('profiles').insert({id:user.id, username:username.trim().toLowerCase(), first_name:first, last_name:last, phone:phone, promo_code:promo});
     }
-    window.location..href="/"
+   router.push("/");
+
   }
 
   return (<main>

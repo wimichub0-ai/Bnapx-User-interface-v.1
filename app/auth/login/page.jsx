@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
 export default function Login(){
   const [email,setEmail]=useState('');const [password,setPassword]=useState('');const [err,setErr]=useState('');
-  async function onSubmit(e){e.preventDefault();setErr('');const {error}=await supabase.auth.signInWithPassword({email,password});if(error){setErr(error.message);return;}window.location..href="/"
+  async function onSubmit(e){e.preventDefault();setErr('');const {error}=await supabase.auth.signInWithPassword({email,password});if(error){setErr(error.message);return;}router.push("/");
+
   return(<main>
     <div className='header-grad'><img className='logo' src='/logo-blue.png'/><h2>Login</h2><p className='small'>Access your account</p></div>
     <div className='container card'><form onSubmit={onSubmit}>

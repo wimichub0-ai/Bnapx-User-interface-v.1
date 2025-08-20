@@ -1,1 +1,0 @@
-export default function Profile(){return (<main><h2>Profile</h2><div className='card-lite'><div className='field'><input placeholder='First name'/></div><div className='field'><input placeholder='Last name'/></div><div className='field'><input placeholder='Phone'/></div><button className='btn'>Save</button></div></main>);}

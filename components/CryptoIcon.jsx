@@ -9,17 +9,6 @@ const icons = {
 
 export default function CryptoIcon({ type, size = 40, alt = "" }) {
   const src = icons[type];
-
-  if (!src) {
-    return <span>❓</span>; // fallback if type is not found
-  }
-
-  return (
-    <Image
-      src={src}
-      alt={alt || type.toUpperCase()}
-      width={size}
-      height={size}
-    />
-  );
+  if (!src) return <span>❓</span>;
+  return <Image src={src} alt={alt || type.toUpperCase()} width={size} height={size} />;
 }

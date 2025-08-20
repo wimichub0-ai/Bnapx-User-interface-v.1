@@ -1,0 +1,1 @@
+export default function History(){return (<main><h2>Transaction History</h2><div className='card-lite'><div className='small'>Sample entries will appear here after payments.</div></div></main>);}

@@ -1,7 +1,6 @@
-:root{
+:global(:root){
   --brand:#0C47F9;
   --brand2:#F6F4FC;
-  --text:#0a0a0a;
 }
 
 .wrap{

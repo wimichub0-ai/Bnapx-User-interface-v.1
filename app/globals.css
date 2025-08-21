@@ -167,4 +167,105 @@
   position: absolute; top: 6px; right: 10px;
   background: transparent; border: 0; font-size: 24px; line-height: 1; cursor: pointer;
 }
+/* --- Home layout --- */
+.home-wrap {
+  padding-bottom: 90px; /* space for TabBar */
+  background: #fff;
+}
+
+/* Brand header with curved bottom */
+.brand-hero {
+  position: relative;
+  background: linear-gradient(180deg, #0C47F9 0%, #2E69FF 100%);
+  padding: 28px 20px 56px;
+  border-bottom-left-radius: 28px;
+  border-bottom-right-radius: 28px;
+  color: #fff;
+}
+
+.brand-hello { max-width: 85%; }
+.hello-1 { font-weight: 800; font-size: 22px; line-height: 1.2; }
+.hello-2 { margin-top: 4px; opacity: 0.9; }
+
+.bell { position: absolute; right: 16px; top: 16px; font-size: 20px; }
+
+/* Wallet card that overlaps header */
+.wallet-card {
+  margin: -32px 16px 8px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(12,71,249,0.08);
+  padding: 16px;
+}
+
+.wc-row {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.wc-title { font-weight: 600; color: #1a1a1a; }
+.wc-balance { font-weight: 800; color: #0C47F9; }
+
+.wc-sep {
+  border: 0; height: 1px; background: #eef0f6; margin: 12px 0;
+}
+
+.wc-actions {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+.pill {
+  width: 100%;
+  border: none;
+  background: #F6F4FC;
+  color: #101828;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-weight: 600;
+}
+.pill-ic { margin-right: 6px; }
+
+/* Sections */
+.section { padding: 12px 16px 0; }
+.section-title { font-size: 16px; font-weight: 800; margin-bottom: 12px; }
+
+/* Quick tiles */
+.quick-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+.quick-tile {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid #eef0f6;
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 6px 18px rgba(16, 24, 40, 0.04);
+  text-decoration: none;
+}
+.qt-icon {
+  width: 56px; height: 56px;
+  border-radius: 12px;
+  background: #F6F4FC;
+  display: grid; place-items: center;
+}
+.qt-text { display: flex; flex-direction: column; }
+.qt-label { font-weight: 700; color: #0C47F9; }
+.qt-sub   { font-size: 12px; color: #667085; }
+
+/* Promo card */
+.promo-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0 16px;
+  background: #F6F4FC;
+  border-radius: 16px;
+  padding: 14px;
+}
+.promo-h { font-weight: 800; color: #0C47F9; }
+.promo-p { color: #475467; }
+.promo-img { border-radius: 12px; width: 100%; height: auto; }
 

@@ -2,126 +2,79 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
 import TabBar from '@/components/TabBar';
+import styles from './home.module.css';
 
-const brandBlue = '#0C47F9';
-const brandSoft = '#F6F4FC';
-
-function QuickTile({ href, iconSrc, label, sub }) {
+export default function Home() {
   return (
-    <Link href={href} className="quick-tile">
-      <div className="qt-icon">
-        <Image src={iconSrc} alt={label} width={48} height={48} />
-      </div>
-      <div className="qt-text">
-        <div className="qt-label">{label}</div>
-        {sub && <div className="qt-sub">{sub}</div>}
-      </div>
-    </Link>
-  );
-}
-
-export default function HomePage() {
-  const [userName, setUserName] = useState('Trader');
-
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase.auth.getUser();
-      const u = data?.user;
-      if (u) {
-        const meta =
-          u.user_metadata?.full_name ||
-          u.user_metadata?.username ||
-          u.email?.split('@')[0];
-        setUserName(meta || 'Trader');
-      }
-    })();
-  }, []);
-
-  return (
-    <main className="home-wrap">
-      {/* Curved brand header */}
-      <div className="brand-hero">
-        <div className="brand-hello">
-          <div className="hello-1">Hi {userName}</div>
-          <div className="hello-2">What are you trading today?</div>
+    <main className={styles.wrap}>
+      {/* Top brand header */}
+      <section className={styles.brand}>
+        <div className={styles.brandRow}>
+          <div className={styles.user}>
+            <Image src="/avatar.jpg" alt="avatar" width={40} height={40} className={styles.avatar}/>
+            <div>
+              <div className={styles.hi}>Hi Michael muta</div>
+              <div className={styles.sub}>What are you trading today?</div>
+            </div>
+          </div>
+          <Image src="/icons/bell.svg" alt="bell" width={20} height={20}/>
         </div>
-        <div className="bell" aria-label="Notifications">🔔</div>
-      </div>
 
-      {/* Wallet Card */}
-      <section className="wallet-card">
-        <div className="wc-row">
-          <div className="wc-title">Wallet Balance</div>
-          <div className="wc-balance">₦500,000.00</div>
-        </div>
-        <hr className="wc-sep" />
-        <div className="wc-actions">
-          <button className="pill">
-            <span className="pill-ic">⤓</span> Withdraw
-          </button>
-          <button className="pill">
-            <span className="pill-ic">＋</span> Add Bank
-          </button>
+        {/* Wallet card */}
+        <div className={styles.wallet}>
+          <div className={styles.walletHead}>
+            <span>Wallet Balance</span>
+            <span className={styles.balance}>₦500,000.00</span>
+          </div>
+          <div className={styles.walletActions}>
+            <button className={styles.actionBtn}>
+              <span className={styles.plus}>＋</span>
+              <span>Add Bank</span>
+            </button>
+            <button className={styles.actionBtn}>
+              <span className={styles.download}>⤓</span>
+              <span>Withdraw</span>
+            </button>
+          </div>
         </div>
       </section>
 
       {/* Quick action */}
-      <section className="section">
-        <h3 className="section-title">Quick action</h3>
-        <div className="quick-grid">
-          <QuickTile
-            href="/trade?tab=sell"
-            iconSrc="/icons/usdt.png"
-            label="Sell Crypto"
-            sub="USDT, BTC, more"
-          />
-          <QuickTile
-            href="/trade?tab=buy"
-            iconSrc="/icons/btc.png"
-            label="Buy Crypto"
-            sub="Instant rates"
-          />
-          <QuickTile
-            href="/trade?tab=giftcard"
-            iconSrc="/icons/itunes.png"
-            label="Sell Giftcard"
-            sub="iTunes, Amazon, more"
-          />
-          <QuickTile
-            href="/send-gift"
-            iconSrc="/icons/gift.png"
-            label="Send Gift"
-            sub="Coming soon"
-          />
-        </div>
-      </section>
-
-      {/* Promo / Ad */}
-      <section className="section">
-        <h3 className="section-title">Promo/Ad</h3>
-        <div className="promo-card">
-          <div className="promo-copy">
-            <div className="promo-h">Boss you don check our rate today?</div>
-            <div className="promo-p">E go shock you, trade now</div>
-          </div>
-          <div className="promo-art">
-            <Image
-              src="/promo-banner.jpg"
-              alt="Promo"
-              width={320}
-              height={110}
-              className="promo-img"
-            />
+      <section className={styles.section}>
+        <h3 className={styles.title}>Quick action</h3>
+        <div className={styles.grid}>
+          <Link href="/trade?tab=sell" className={`${styles.tile} ${styles.blueTile}`}>
+            <Image src="/icons/usdt.png" alt="USDT" width={56} height={56}/>
+            <span>Sell Crypto</span>
+          </Link>
+          <Link href="/trade?tab=buy" className={`${styles.tile} ${styles.cyanTile}`}>
+            <Image src="/icons/btc.png" alt="BTC" width={56} height={56}/>
+            <span>Buy Crypto</span>
+          </Link>
+          <Link href="/trade?tab=giftcard" className={`${styles.tile} ${styles.lilacTile}`}>
+            <Image src="/icons/itunes.png" alt="iTunes" width={56} height={56}/>
+            <span>Sell Giftcard</span>
+          </Link>
+          <div className={`${styles.tile} ${styles.purpleTile}`}>
+            <Image src="/icons/gift.png" alt="Gift" width={56} height={56}/>
+            <span>Coming soon{"\n"}Send Gift</span>
           </div>
         </div>
       </section>
 
-      <TabBar />
+      {/* Promo/Ad */}
+      <section className={styles.section}>
+        <h3 className={styles.title}>Promo/Ad</h3>
+        <div className={styles.promo}>
+          <Image src="/banners/promo1.jpg" alt="Promo" fill className={styles.promoImg}/>
+        </div>
+      </section>
+
+      <TabBar active="home" />
     </main>
   );
 }
+
 
 

@@ -118,3 +118,53 @@
 }
 .tab{ color:#64748b; text-decoration:none; font-weight:600; }
 .tab.active{ color:var(--bnapx-blue); }
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 8px 0 16px;
+}
+.tab {
+  padding: 10px 12px;
+  border: 1px solid #E7EAF3;
+  border-radius: 10px;
+  background: #fff;
+  font-weight: 600;
+}
+.tab--active {
+  background: #0C47F9;
+  color: #fff;
+  border-color: #0C47F9;
+}
+
+.wallet-display {
+  display: flex;
+  gap: 8px;
+}
+.wallet-display input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #E7EAF3;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+/* Modal */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px; z-index: 50;
+}
+.modal {
+  position: relative;
+  width: 100%; max-width: 420px;
+  background: #fff; border-radius: 16px;
+  padding: 20px 16px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.18);
+}
+.modal-close {
+  position: absolute; top: 6px; right: 10px;
+  background: transparent; border: 0; font-size: 24px; line-height: 1; cursor: pointer;
+}
+

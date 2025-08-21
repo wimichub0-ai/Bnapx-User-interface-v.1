@@ -1,146 +1,209 @@
 'use client';
 
 import { useState } from 'react';
+import styles from './trade.module.css';
 
-const BNAPX_WALLET = 'UQCihj9gc-ySfF17s2h6XgiplYQtACjhfWlB9L9MMRzcuOA6';
+const BRAND_WALLET = 'UQCihj9gc-ySfF17s2h6Xgi...L9MMRzcuOA6'; // your reference wallet
+const NETWORKS = [
+  { code: 'USDT-TRC20', label: 'USDT • TRC20' },
+  { code: 'USDT-ERC20', label: 'USDT • ERC20' },
+  { code: 'USDC-TRC20', label: 'USDC • TRC20' },
+  { code: 'USDC-ERC20', label: 'USDC • ERC20' },
+  { code: 'BTC',        label: 'BTC • Mainnet' },
+];
 
 export default function TradePage() {
-  const [tab, setTab] = useState('sell'); // 'sell' | 'buy' | 'giftcard'
-
+  const [tab, setTab] = useState<'sell'|'buy'|'giftcard'>('sell');
   return (
-    <main className="container" style={{ paddingBottom: 90 }}>
-      <h2 style={{ margin: '16px 0' }}>Trade</h2>
+    <main className={styles.wrap}>
+      <h1 className={styles.title}>Trade</h1>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+      <div className={styles.tabs}>
         <button
-          className={tab === 'sell' ? 'btn' : 'pill'}
-          onClick={() => setTab('sell')}
-        >
-          Sell Crypto
-        </button>
+          className={`${styles.tab} ${tab==='sell' ? styles.tabActive : ''}`}
+          onClick={()=>setTab('sell')}
+        >Sell Crypto</button>
         <button
-          className={tab === 'buy' ? 'btn' : 'pill'}
-          onClick={() => setTab('buy')}
-        >
-          Buy Crypto
-        </button>
+          className={`${styles.tab} ${tab==='buy' ? styles.tabActive : ''}`}
+          onClick={()=>setTab('buy')}
+        >Buy Crypto</button>
         <button
-          className={tab === 'giftcard' ? 'btn' : 'pill'}
-          onClick={() => setTab('giftcard')}
-        >
-          Sell Giftcard
-        </button>
+          className={`${styles.tab} ${tab==='giftcard' ? styles.tabActive : ''}`}
+          onClick={()=>setTab('giftcard')}
+        >Sell Giftcard</button>
       </div>
 
-      {tab === 'sell' && <SellForm />}
-      {tab === 'buy' && <BuyForm />}
-      {tab === 'giftcard' && <GiftcardForm />}
+      {tab==='sell' && <SellCard />}
+      {tab==='buy' && <BuyCard />}
+      {tab==='giftcard' && <GiftcardPlaceholder />}
     </main>
   );
 }
 
-function SellForm() {
-  const [amount, setAmount] = useState('');
+/* ---------- SELL ---------- */
+function SellCard(){
   const [network, setNetwork] = useState('USDT-TRC20');
+  const [amount, setAmount] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
-  function copyAddr() {
-    navigator.clipboard?.writeText(BNAPX_WALLET);
-    alert('Wallet address copied');
-  }
-  function confirmSent() {
-    // TODO: send to API to create a “Pending” record
-    alert('Thanks! We marked this as Pending. We’ll confirm shortly.');
+  async function copyAddr() {
+    try {
+      await navigator.clipboard.writeText(BRAND_WALLET);
+      setCopied(true);
+      setTimeout(()=>setCopied(false), 1800);
+    } catch {}
   }
 
   return (
-    <section className="card" style={{ padding: 16 }}>
-      <h3>Sell Crypto</h3>
-
-      <label className="small">Network</label>
-      <select value={network} onChange={(e) => setNetwork(e.target.value)}>
-        <option>USDT-TRC20</option>
-        <option>USDT-ERC20</option>
-        <option>USDT-BEP20</option>
-        <option>USDC-ERC20</option>
-        <option>BTC</option>
-      </select>
-
-      <label className="small" style={{ marginTop: 12 }}>Amount (NGN)</label>
-      <input
-        placeholder="3000"
-        value={amount}
-        onChange={(e) => setAmount(e.target.value)}
-      />
-
-      <label className="small" style={{ marginTop: 12 }}>Send to this wallet</label>
-      <div style={{ display: 'flex', gap: 8 }}>
-        <input readOnly value={BNAPX_WALLET} />
-        <button className="pill" type="button" onClick={copyAddr}>Copy</button>
+    <section className={styles.card}>
+      <div className={styles.cardHead}>
+        <div className={styles.cardTitle}>Sell Crypto</div>
+        <div className={styles.badge}>Instant</div>
       </div>
 
-      <button className="btn" style={{ marginTop: 12 }} onClick={confirmSent}>
+      <div className={styles.grid}>
+        <div className={styles.field}>
+          <label>Network</label>
+          <div className={styles.selectWrap}>
+            <select
+              className={styles.select}
+              value={network}
+              onChange={(e)=>setNetwork(e.target.value)}
+            >
+              {NETWORKS.map(n => <option key={n.code} value={n.code}>{n.label}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div className={styles.field}>
+          <label>Amount (NGN)</label>
+          <input
+            className={styles.input}
+            placeholder="₦ 0.00"
+            inputMode="numeric"
+            value={amount}
+            onChange={(e)=>setAmount(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className={styles.field}>
+        <label>Send to this wallet</label>
+        <div className={styles.copyRow}>
+          <input className={styles.input} readOnly value={BRAND_WALLET}/>
+          <button className={styles.copyBtn} type="button" onClick={copyAddr}>
+            {copied ? 'Copied' : 'Copy'}
+          </button>
+        </div>
+      </div>
+
+      <button className={styles.primary} onClick={()=>setConfirmOpen(true)}>
         I have sent
       </button>
-      <p className="small" style={{ color: '#6B7280', marginTop: 8 }}>
+
+      <p className={styles.help}>
         We’ll verify on-chain and update your status to <b>Paid</b> when confirmed.
       </p>
+
+      {confirmOpen && (
+        <ConfirmModal
+          title="Confirm transfer"
+          desc={`You’re confirming a transfer on ${network}. We’ll mark this trade as Pending and notify you when it’s confirmed.`}
+          onClose={()=>setConfirmOpen(false)}
+          onConfirm={()=>{ setConfirmOpen(false); alert('Marked as Pending'); }}
+        />
+      )}
     </section>
   );
 }
 
-function BuyForm() {
-  const [amount, setAmount] = useState('');
+/* ---------- BUY ---------- */
+function BuyCard(){
   const [network, setNetwork] = useState('USDT-TRC20');
-  const [dest, setDest] = useState('');
-
-  function createOrder() {
-    // TODO: POST to /api/payments/create
-    alert(`Buy request created for ${amount} on ${network} → ${dest} (Pending)`);
-  }
+  const [amount, setAmount] = useState('');
+  const [toAddr, setToAddr] = useState('');
 
   return (
-    <section className="card" style={{ padding: 16 }}>
-      <h3>Buy Crypto</h3>
+    <section className={styles.card}>
+      <div className={styles.cardHead}>
+        <div className={styles.cardTitle}>Buy Crypto</div>
+        <div className={styles.badge}>Best rates</div>
+      </div>
 
-      <label className="small">Network</label>
-      <select value={network} onChange={(e) => setNetwork(e.target.value)}>
-        <option>USDT-TRC20</option>
-        <option>USDT-ERC20</option>
-        <option>USDT-BEP20</option>
-        <option>USDC-ERC20</option>
-        <option>BTC</option>
-      </select>
+      <div className={styles.grid}>
+        <div className={styles.field}>
+          <label>Network</label>
+          <div className={styles.selectWrap}>
+            <select
+              className={styles.select}
+              value={network}
+              onChange={(e)=>setNetwork(e.target.value)}
+            >
+              {NETWORKS.map(n => <option key={n.code} value={n.code}>{n.label}</option>)}
+            </select>
+          </div>
+        </div>
 
-      <label className="small" style={{ marginTop: 12 }}>Amount (NGN)</label>
-      <input
-        placeholder="3000"
-        value={amount}
-        onChange={(e) => setAmount(e.target.value)}
-      />
+        <div className={styles.field}>
+          <label>Amount (NGN)</label>
+          <input
+            className={styles.input}
+            placeholder="₦ 0.00"
+            inputMode="numeric"
+            value={amount}
+            onChange={(e)=>setAmount(e.target.value)}
+          />
+        </div>
+      </div>
 
-      <label className="small" style={{ marginTop: 12 }}>Your wallet address</label>
-      <input
-        placeholder="Paste the address to receive crypto"
-        value={dest}
-        onChange={(e) => setDest(e.target.value)}
-      />
+      <div className={styles.field}>
+        <label>Recipient wallet address</label>
+        <input
+          className={styles.input}
+          placeholder="Paste the wallet you want us to send to"
+          value={toAddr}
+          onChange={(e)=>setToAddr(e.target.value)}
+        />
+      </div>
 
-      <button className="btn" style={{ marginTop: 12 }} onClick={createOrder}>
+      <button className={styles.primary} onClick={()=>alert('Payment intent (test) created')}>
         Create Test Payment
       </button>
-      <p className="small" style={{ color: '#6B7280', marginTop: 8 }}>
-        We’ll send crypto to your address after payment is confirmed.
+
+      <p className={styles.help}>
+        We’ll send the crypto to the address above once payment is complete.
       </p>
     </section>
   );
 }
 
-function GiftcardForm() {
+/* ---------- GIFT CARD (placeholder for now) ---------- */
+function GiftcardPlaceholder(){
   return (
-    <section className="card" style={{ padding: 16 }}>
-      <h3>Sell Giftcard</h3>
-      <p className="small">Coming soon — UI only placeholder.</p>
+    <section className={styles.card}>
+      <div className={styles.cardHead}>
+        <div className={styles.cardTitle}>Sell Giftcard</div>
+        <div className={styles.badge}>Coming soon</div>
+      </div>
+      <p className={styles.help}>UI will match your giftcard screen with logos, categories and rate ticker.</p>
     </section>
+  );
+}
+
+/* ---------- Small modal ---------- */
+function ConfirmModal({title, desc, onClose, onConfirm}:{title:string,desc:string,onClose:()=>void,onConfirm:()=>void}){
+  return (
+    <div className={styles.modalBack}>
+      <div className={styles.modal}>
+        <h3 className={styles.modalTitle}>{title}</h3>
+        <p className={styles.modalText}>{desc}</p>
+        <div className={styles.modalRow}>
+          <button className={styles.secondary} onClick={onClose}>Cancel</button>
+          <button className={styles.primary} onClick={onConfirm}>Confirm</button>
+        </div>
+      </div>
+    </div>
   );
 }
 

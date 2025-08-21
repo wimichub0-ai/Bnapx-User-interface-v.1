@@ -1,146 +1,216 @@
-"use client";
+'use client';
 
-import { Suspense, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import TabBar from "@/components/TabBar";
+import { useState } from 'react';
+import Link from 'next/link';
 
-function TradeInner() {
-  const sp = useSearchParams();
-  const initial = sp.get("tab") || "sell";
-
-  const [tab, setTab] = useState(initial);
-  const [coin, setCoin] = useState("USDT");
-  const [network, setNetwork] = useState("TRC20");
-  const [amount, setAmount] = useState("");
-
-  const COINS = {
-    BTC:  { networks: ["Bitcoin"], rate: 95000000 },
-    ETH:  { networks: ["Ethereum"], rate: 600000 },
-    USDT: { networks: ["TRC20","ERC20","BEP20","Solana","Polygon"], rate: 1500 },
-    USDC: { networks: ["AVAXC","ERC20","BEP20","Solana","Polygon","POS","Arbitrum"], rate: 1480 },
-    TRX:  { networks: ["TRON"], rate: 150 },
-    SOL:  { networks: ["Solana"], rate: 95000 },
-    TON:  { networks: ["TON"], rate: 80000 },
-  };
-
-  const BRANDS = [
-    { key:"razer", name:"RAZER GOLD",   img:"/cards/razer.png" },
-    { key:"itunes",name:"ITUNES",       img:"/cards/itunes.png" },
-    { key:"steam", name:"STEAM",        img:"/cards/steam.png" },
-    { key:"amazon",name:"AMAZON",       img:"/cards/amazon.png" },
-    { key:"walmart",name:"WALMART CARD",img:"/cards/walmart.png", list:true },
-    { key:"spotify",name:"SPOTIFY CARD",img:"/cards/spotify.png", list:true },
-    { key:"xbox",  name:"XBOX CARD",    img:"/cards/xbox.png", list:true },
-    { key:"googleplay",name:"GOOGLE PLAY",img:"/cards/googleplay.png", list:true },
-  ];
-
-  useEffect(() => {
-    if (tab === "sell" || tab === "buy") setNetwork(COINS[coin].networks[0]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [coin, tab]);
-
-  const rate = COINS[coin].rate;
-  const ngn = useMemo(() => {
-    const v = parseFloat(amount || "0");
-    return isNaN(v)
-      ? "0"
-      : new Intl.NumberFormat("en-NG",{ style:"currency", currency:"NGN" }).format(v * rate);
-  }, [amount, rate]);
+export default function TradePage() {
+  const [active, setActive] = useState<'sell' | 'buy' | 'giftcard'>('sell');
 
   return (
-    <main className="container">
-      <h2 style={{ margin: "0 0 8px" }}>Trade</h2>
+    <main className="container card" style={{paddingBottom:90}}>
+      <h2 className="section-title">Trade</h2>
 
-      <div className="tabs-inline">
-        <button className={`tabbtn ${tab==='sell'?'active':''}`} onClick={()=>setTab("sell")}>Sell Crypto</button>
-        <button className={`tabbtn ${tab==='buy'?'active':''}`} onClick={()=>setTab("buy")}>Buy Crypto</button>
-        <button className={`tabbtn ${tab==='giftcard'?'active':''}`} onClick={()=>setTab("giftcard")}>Sell Giftcard</button>
+      {/* Tabs */}
+      <div className="tabs">
+        <button className={`tab ${active==='sell'?'tab--active':''}`} onClick={()=>setActive('sell')}>Sell Crypto</button>
+        <button className={`tab ${active==='buy'?'tab--active':''}`} onClick={()=>setActive('buy')}>Buy Crypto</button>
+        <button className={`tab ${active==='giftcard'?'tab--active':''}`} onClick={()=>setActive('giftcard')}>Sell Giftcard</button>
       </div>
 
-      {tab !== "giftcard" && (
-        <div className="card-lite">
-          <div className="field">
-            <select
-              value={coin}
-              onChange={(e) => {
-                const val = e.target.value;
-                setCoin(val);
-                setNetwork(COINS[val].networks[0]);
-              }}
-            >
-              {Object.keys(COINS).map(k => <option key={k} value={k}>{k}</option>)}
-            </select>
-          </div>
-
-          <div className="field">
-            <select value={network} onChange={(e)=>setNetwork(e.target.value)}>
-              {COINS[coin].networks.map(n => <option key={n} value={n}>{n}</option>)}
-            </select>
-          </div>
-
-          <div className="field">
-            <input placeholder="Amount" value={amount} onChange={(e)=>setAmount(e.target.value)} />
-          </div>
-
-          <div className="small">
-            Rate: {new Intl.NumberFormat("en-NG",{style:"currency",currency:"NGN"}).format(rate)} per {coin}
-          </div>
-          <div style={{ marginTop: 8, fontWeight: 700 }}>You’ll receive: {ngn}</div>
-
-          <button
-            className="btn"
-            onClick={() => alert("Payment intent (Flutterwave sandbox) would be created here in /api/payments/create")}
-          >
-            Create Test Payment
-          </button>
-        </div>
-      )}
-
-      {tab === "giftcard" && (
-        <div>
-          <div className="small" style={{ margin:"8px 2px" }}>
-            Kindly select the giftcard you want to redeem
-          </div>
-
-          <div className="tiles grid">
-            {BRANDS.slice(0, 4).map(b => (
-              <a key={b.key} className="tile" href="#gift">
-                <img src={b.img} alt={b.name} />
-                <div style={{ fontWeight: 700 }}>{b.name}</div>
-              </a>
-            ))}
-          </div>
-
-          <div style={{ marginTop: 14 }} className="card-lite">
-            {BRANDS.slice(4).map(b => (
-              <div key={b.key} style={{
-                display:"flex", alignItems:"center", gap:10, padding:"10px 0", borderBottom:"1px solid var(--line)"
-              }}>
-                <img src={b.img} style={{ width:64, height:40, borderRadius:8, objectFit:"cover" }} alt={b.name}/>
-                <div style={{ fontWeight:700, flex:1 }}>
-                  {b.name}
-                  <div className="small">Hot Deals 🔥</div>
-                </div>
-              </div>
-            ))}
-            <div className="small" style={{ marginTop:8, display:"flex", justifyContent:"space-between" }}>
-              <span>Rate Update: $1</span>
-              <span>NGN******</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <TabBar />
+      {active === 'sell'    && <SellForm />}
+      {active === 'buy'     && <BuyForm  />}
+      {active === 'giftcard'&& <GiftcardStub />}
     </main>
   );
 }
 
-export default function TradePage() {
+/* ---------- SELL ---------- */
+function SellForm() {
+  const [amount, setAmount] = useState('');
+  const [coin, setCoin]     = useState('USDT');
+  const [network, setNet]   = useState('TRON-TRC20');
+  const [showModal, setShowModal] = useState(false);
+
+  // Your platform wallet address (read-only for users)
+  const platformWallet = 'UQCihj9gc-ySfF17s2h6XgiplYQtACjhfWlB9L9MMRzcuOA6';
+
+  const copyWallet = async () => {
+    try {
+      await navigator.clipboard.writeText(platformWallet);
+      alert('Wallet address copied!');
+    } catch {
+      alert('Copy failed. Long-press to copy.');
+    }
+  };
+
   return (
-    <Suspense fallback={<div className="container">Loading...</div>}>
-      <TradeInner />
-    </Suspense>
+    <form className="trade-form" onSubmit={(e)=>e.preventDefault()}>
+      <h3>Sell Crypto</h3>
+
+      <div className="row">
+        <div className="field">
+          <label className="small">Coin</label>
+          <select value={coin} onChange={e=>setCoin(e.target.value)}>
+            <option>USDT</option>
+            <option>USDC</option>
+            <option>BTC</option>
+            <option>ETH</option>
+            <option>SOL</option>
+            <option>TRX</option>
+            <option>TON</option>
+          </select>
+        </div>
+        <div className="field">
+          <label className="small">Network</label>
+          <select value={network} onChange={e=>setNet(e.target.value)}>
+            {/* common networks */}
+            <option>TRON-TRC20</option>
+            <option>ETH-ERC20</option>
+            <option>BSC-BEP20</option>
+            <option>Polygon</option>
+            <option>Solana</option>
+            <option>TON</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="field">
+        <input
+          type="number"
+          min="0"
+          step="0.0001"
+          placeholder="Enter amount to sell"
+          value={amount}
+          onChange={(e)=>setAmount(e.target.value)}
+          required
+        />
+      </div>
+
+      {/* Display your receiving wallet (read-only) */}
+      <div className="field">
+        <label className="small">Send to this wallet address</label>
+        <div className="wallet-display">
+          <input type="text" value={platformWallet} readOnly />
+          <button type="button" onClick={copyWallet}>Copy</button>
+        </div>
+      </div>
+
+      <button className="btn" type="button" onClick={()=>setShowModal(true)}>
+        I Have Sent
+      </button>
+
+      {/* Confirmation Modal */}
+      {showModal && (
+        <Modal onClose={()=>setShowModal(false)}>
+          <h4>Thanks! We’ll verify your transfer</h4>
+          <p className="small">
+            We’ve received your notice for <b>{amount || '—'}</b> {coin} on <b>{network}</b>.
+            Our team will confirm on-chain and update your status shortly.
+          </p>
+          <button className="btn" onClick={()=>setShowModal(false)}>Okay</button>
+        </Modal>
+      )}
+    </form>
   );
 }
+
+/* ---------- BUY ---------- */
+function BuyForm() {
+  const [amount, setAmount] = useState('');
+  const [coin, setCoin]     = useState('USDT');
+  const [network, setNet]   = useState('TRON-TRC20');
+  const [destWallet, setDestWallet] = useState('');
+
+  const onSubmit = (e) => {
+    e.preventDefault();
+    if (!destWallet.trim()) {
+      alert('Please enter your wallet address.');
+      return;
+    }
+    // keep your existing payment flow here
+    alert('Proceeding to payment (test)…');
+  };
+
+  return (
+    <form className="trade-form" onSubmit={onSubmit}>
+      <h3>Buy Crypto</h3>
+
+      <div className="row">
+        <div className="field">
+          <label className="small">Coin</label>
+          <select value={coin} onChange={e=>setCoin(e.target.value)}>
+            <option>USDT</option>
+            <option>USDC</option>
+            <option>BTC</option>
+            <option>ETH</option>
+            <option>SOL</option>
+            <option>TRX</option>
+            <option>TON</option>
+          </select>
+        </div>
+        <div className="field">
+          <label className="small">Network</label>
+          <select value={network} onChange={e=>setNet(e.target.value)}>
+            <option>TRON-TRC20</option>
+            <option>ETH-ERC20</option>
+            <option>BSC-BEP20</option>
+            <option>Polygon</option>
+            <option>Solana</option>
+            <option>TON</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="field">
+        <input
+          type="number"
+          min="0"
+          step="0.0001"
+          placeholder="Enter amount to buy"
+          value={amount}
+          onChange={(e)=>setAmount(e.target.value)}
+          required
+        />
+      </div>
+
+      {/* USER wallet address to receive coins */}
+      <div className="field">
+        <label className="small">Your wallet address (receive here)</label>
+        <input
+          type="text"
+          placeholder="Paste wallet address"
+          value={destWallet}
+          onChange={(e)=>setDestWallet(e.target.value)}
+          required
+        />
+      </div>
+
+      <button className="btn" type="submit">Proceed to Payment</button>
+    </form>
+  );
+}
+
+/* ---------- Giftcard placeholder (kept minimal for now) ---------- */
+function GiftcardStub() {
+  return (
+    <div className="trade-form">
+      <h3>Sell Giftcard</h3>
+      <p className="small">Choose a card and upload details (coming next).</p>
+      <Link href="/trade">Back</Link>
+    </div>
+  );
+}
+
+/* ---------- Generic Modal ---------- */
+function Modal({ children, onClose }) {
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal" onClick={e=>e.stopPropagation()}>
+        {children}
+        <button className="modal-close" onClick={onClose} aria-label="Close">×</button>
+      </div>
+    </div>
+  );
+}
+
 

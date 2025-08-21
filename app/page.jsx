@@ -1,106 +1,121 @@
 'use client';
-export const dynamic = 'force-dynamic'; // avoid static prerender issues for "/"
 
-import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
-import NextDynamic from 'next/dynamic';
-import CryptoAction from '@/components/CryptoAction';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import TabBar from '@/components/TabBar';
 
-// Make TabBar render only on the client
-const TabBar = NextDynamic(() => import('@/components/TabBar'), { ssr: false });
+const brandBlue = '#0C47F9';
+const brandSoft = '#F6F4FC';
 
-export default function Page() {
-  const [session, setSession] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let mounted = true;
-
-    (async () => {
-      const { data } = await supabase.auth.getSession();
-      if (mounted) {
-        setSession(data.session ?? null);
-        setLoading(false);
-      }
-    })();
-
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
-      if (mounted) setSession(s);
-    });
-
-    return () => {
-      mounted = false;
-      sub.subscription.unsubscribe();
-    };
-  }, []);
-
-  if (loading) return null; // or a spinner
-  return session ? <Home /> : <Landing />;
+function QuickTile({ href, iconSrc, label, sub }) {
+  return (
+    <Link href={href} className="quick-tile">
+      <div className="qt-icon">
+        <Image src={iconSrc} alt={label} width={48} height={48} />
+      </div>
+      <div className="qt-text">
+        <div className="qt-label">{label}</div>
+        {sub && <div className="qt-sub">{sub}</div>}
+      </div>
+    </Link>
+  );
 }
 
-/* ---------- LOGGED-IN HOME (brand UI) ---------- */
-function Home() {
-  const [userName, setUserName] = useState('');
+export default function HomePage() {
+  const [userName, setUserName] = useState('Trader');
 
   useEffect(() => {
-    async function loadUser() {
+    (async () => {
       const { data } = await supabase.auth.getUser();
-      if (data?.user) {
-        const metaName =
-          data.user.user_metadata?.full_name ||
-          data.user.user_metadata?.username;
-        setUserName(metaName || data.user.email || 'Trader');
+      const u = data?.user;
+      if (u) {
+        const meta =
+          u.user_metadata?.full_name ||
+          u.user_metadata?.username ||
+          u.email?.split('@')[0];
+        setUserName(meta || 'Trader');
       }
-    }
-    loadUser();
+    })();
   }, []);
 
   return (
-    <main className="container">
-      {/* Hero */}
-      <section className="home-hero">
-        <div className="hero-top">
-          <div className="hello">
-            <div className="hello-title">Hi {userName}</div>
-            <div className="hello-sub">What are you trading today?</div>
-          </div>
-          <div className="bell" aria-label="Notifications">🔔</div>
+    <main className="home-wrap">
+      {/* Curved brand header */}
+      <div className="brand-hero">
+        <div className="brand-hello">
+          <div className="hello-1">Hi {userName}</div>
+          <div className="hello-2">What are you trading today?</div>
         </div>
+        <div className="bell" aria-label="Notifications">🔔</div>
+      </div>
 
-        {/* Wallet */}
-        <div className="wallet">
-          <div className="wallet-row">
-            <div className="wallet-title">Wallet Balance</div>
-            <div className="wallet-balance">₦500,000.00</div>
-          </div>
-          <div className="wallet-actions">
-            <button className="pill"><span className="icon">⤓</span>Withdraw</button>
-            <button className="pill"><span className="icon">＋</span>Add Bank</button>
-          </div>
+      {/* Wallet Card */}
+      <section className="wallet-card">
+        <div className="wc-row">
+          <div className="wc-title">Wallet Balance</div>
+          <div className="wc-balance">₦500,000.00</div>
+        </div>
+        <hr className="wc-sep" />
+        <div className="wc-actions">
+          <button className="pill">
+            <span className="pill-ic">⤓</span> Withdraw
+          </button>
+          <button className="pill">
+            <span className="pill-ic">＋</span> Add Bank
+          </button>
         </div>
       </section>
 
-      {/* Quick actions */}
-      <section className="home-section">
+      {/* Quick action */}
+      <section className="section">
         <h3 className="section-title">Quick action</h3>
-        <div className="tiles">
-          <CryptoAction type="usdt"  label="Sell Crypto"   href="/trade?tab=sell" />
-          <CryptoAction type="btc"   label="Buy Crypto"    href="/trade?tab=buy" />
-          <CryptoAction type="itunes"label="Sell Giftcard" href="/trade?tab=giftcard" />
-          <CryptoAction type="gift"  label="Send Gift"     href="/send-gift" />
+        <div className="quick-grid">
+          <QuickTile
+            href="/trade?tab=sell"
+            iconSrc="/icons/usdt.png"
+            label="Sell Crypto"
+            sub="USDT, BTC, more"
+          />
+          <QuickTile
+            href="/trade?tab=buy"
+            iconSrc="/icons/btc.png"
+            label="Buy Crypto"
+            sub="Instant rates"
+          />
+          <QuickTile
+            href="/trade?tab=giftcard"
+            iconSrc="/icons/itunes.png"
+            label="Sell Giftcard"
+            sub="iTunes, Amazon, more"
+          />
+          <QuickTile
+            href="/send-gift"
+            iconSrc="/icons/gift.png"
+            label="Send Gift"
+            sub="Coming soon"
+          />
         </div>
       </section>
 
-      {/* Promo */}
-      <section className="home-section">
+      {/* Promo / Ad */}
+      <section className="section">
         <h3 className="section-title">Promo/Ad</h3>
-        <div className="promo">
-          <div className="promo-text">
+        <div className="promo-card">
+          <div className="promo-copy">
             <div className="promo-h">Boss you don check our rate today?</div>
             <div className="promo-p">E go shock you, trade now</div>
           </div>
-          <div className="promo-img" aria-hidden>🧢</div>
+          <div className="promo-art">
+            <Image
+              src="/promo-banner.jpg"
+              alt="Promo"
+              width={320}
+              height={110}
+              className="promo-img"
+            />
+          </div>
         </div>
       </section>
 
@@ -109,26 +124,4 @@ function Home() {
   );
 }
 
-/* ---------- LOGGED-OUT LANDING (your original) ---------- */
-function Landing() {
-  return (
-    <main>
-      <div className="header-grad">
-        <img className="logo" src="/logo-blue.png" alt="BnapX" />
-        <h2>Welcome to BnapX</h2>
-        <p className="small">Start by signing in or creating an account</p>
-      </div>
-      <div className="container card">
-        <div style={{ display: 'flex', gap: 10 }}>
-          <Link className="btn" href="/auth/signup" style={{ textAlign: 'center', paddingTop: 12 }}>
-            Create account
-          </Link>
-          <Link className="btn" href="/auth/login" style={{ textAlign: 'center', paddingTop: 12 }}>
-            Login
-          </Link>
-        </div>
-      </div>
-    </main>
-  );
-}
 

@@ -3,12 +3,12 @@ export const dynamic = 'force-dynamic'; // avoid static prerender issues for "/"
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
+import NextDynamic from 'next/dynamic';
 import CryptoAction from '@/components/CryptoAction';
 import { supabase } from '@/lib/supabaseClient';
 
 // Make TabBar render only on the client
-const TabBar = dynamic(() => import('@/components/TabBar'), { ssr: false });
+const TabBar = NextDynamic(() => import('@/components/TabBar'), { ssr: false });
 
 export default function Page() {
   const [session, setSession] = useState(null);

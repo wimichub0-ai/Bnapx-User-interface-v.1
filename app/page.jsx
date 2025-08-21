@@ -1,14 +1,56 @@
+'use client';
+export const dynamic = 'force-dynamic'; // avoid static prerender issues for "/"
+
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import dynamic from 'next/dynamic';
+import CryptoAction from '@/components/CryptoAction';
+import { supabase } from '@/lib/supabaseClient';
+
+// Make TabBar render only on the client
+const TabBar = dynamic(() => import('@/components/TabBar'), { ssr: false });
+
+export default function Page() {
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (mounted) {
+        setSession(data.session ?? null);
+        setLoading(false);
+      }
+    })();
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+      if (mounted) setSession(s);
+    });
+
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
+
+  if (loading) return null; // or a spinner
+  return session ? <Home /> : <Landing />;
+}
+
 /* ---------- LOGGED-IN HOME (brand UI) ---------- */
 function Home() {
-  const [userName, setUserName] = useState("");
+  const [userName, setUserName] = useState('');
 
   useEffect(() => {
     async function loadUser() {
       const { data } = await supabase.auth.getUser();
       if (data?.user) {
-        // Try profile name first (if you store it in metadata), else email
-        const metaName = data.user.user_metadata?.full_name || data.user.user_metadata?.username;
-        setUserName(metaName || data.user.email || "Trader");
+        const metaName =
+          data.user.user_metadata?.full_name ||
+          data.user.user_metadata?.username;
+        setUserName(metaName || data.user.email || 'Trader');
       }
     }
     loadUser();
@@ -63,6 +105,29 @@ function Home() {
       </section>
 
       <TabBar />
+    </main>
+  );
+}
+
+/* ---------- LOGGED-OUT LANDING (your original) ---------- */
+function Landing() {
+  return (
+    <main>
+      <div className="header-grad">
+        <img className="logo" src="/logo-blue.png" alt="BnapX" />
+        <h2>Welcome to BnapX</h2>
+        <p className="small">Start by signing in or creating an account</p>
+      </div>
+      <div className="container card">
+        <div style={{ display: 'flex', gap: 10 }}>
+          <Link className="btn" href="/auth/signup" style={{ textAlign: 'center', paddingTop: 12 }}>
+            Create account
+          </Link>
+          <Link className="btn" href="/auth/login" style={{ textAlign: 'center', paddingTop: 12 }}>
+            Login
+          </Link>
+        </div>
+      </div>
     </main>
   );
 }

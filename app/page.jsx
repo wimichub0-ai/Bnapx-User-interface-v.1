@@ -18,7 +18,7 @@ export default function Home() {
               <div className={styles.sub}>What are you trading today?</div>
             </div>
           </div>
-          <Image src="/icons/bell.svg" alt="bell" width={20} height={20}/>
+          <Image src="/icons/bell.png" alt="bell" width={20} height={20}/>
         </div>
 
         {/* Wallet card */}

@@ -1,36 +1,14 @@
-"use client";
+'use client';
+import Link from 'next/link';
+import styles from './tabbar.module.css';
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-
-export default function TabBar() {
-  const pathname = usePathname();
-
-  const TABS = [
-    { href: "/",        label: "Home",    icon: "🏠" },
-    { href: "/trade",   label: "Trade",   icon: "💱" },
-    { href: "/history", label: "History", icon: "📄" },
-    { href: "/profile", label: "Profile", icon: "👤" },
-  ];
-
+export default function TabBar({active="home"}) {
   return (
-    <nav className="tabbar" role="navigation" aria-label="Bottom tabs">
-      <div className="tabs">
-        {TABS.map(({ href, label, icon }) => {
-          const active = pathname === href;
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`tab ${active ? "active" : ""}`}
-              aria-current={active ? "page" : undefined}
-            >
-              <div className="dot" aria-hidden>{icon}</div>
-              {label}
-            </Link>
-          );
-        })}
-      </div>
+    <nav className={styles.bar}>
+      <Link href="/" className={`${styles.item} ${active==='home'&&styles.active}`}>🏠<span>Home</span></Link>
+      <Link href="/trade" className={`${styles.item} ${active==='trade'&&styles.active}`}>🎵<span>Trade</span></Link>
+      <Link href="/history" className={`${styles.item} ${active==='history'&&styles.active}`}>📄<span>History</span></Link>
+      <Link href="/profile" className={`${styles.item} ${active==='profile'&&styles.active}`}>👤<span>Profile</span></Link>
     </nav>
   );
 }

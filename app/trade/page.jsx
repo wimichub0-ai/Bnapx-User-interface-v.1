@@ -14,6 +14,7 @@ const NETWORKS = [
 
 export default function TradePage() {
  const [tab, setTab] = useState('sell');
+
   return (
     <main className={styles.wrap}>
       <h1 className={styles.title}>Trade</h1>
@@ -193,6 +194,7 @@ function GiftcardPlaceholder(){
 
 /* ---------- Small modal ---------- */
 function ConfirmModal({ title, desc, onClose, onConfirm }) {
+
   return (
     <div className={styles.modalBack}>
       <div className={styles.modal}>

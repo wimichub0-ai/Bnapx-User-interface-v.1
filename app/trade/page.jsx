@@ -1,215 +1,146 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
+
+const BNAPX_WALLET = 'UQCihj9gc-ySfF17s2h6XgiplYQtACjhfWlB9L9MMRzcuOA6';
 
 export default function TradePage() {
-  const [active, setActive] = useState<'sell' | 'buy' | 'giftcard'>('sell');
+  const [tab, setTab] = useState('sell'); // 'sell' | 'buy' | 'giftcard'
 
   return (
-    <main className="container card" style={{paddingBottom:90}}>
-      <h2 className="section-title">Trade</h2>
+    <main className="container" style={{ paddingBottom: 90 }}>
+      <h2 style={{ margin: '16px 0' }}>Trade</h2>
 
-      {/* Tabs */}
-      <div className="tabs">
-        <button className={`tab ${active==='sell'?'tab--active':''}`} onClick={()=>setActive('sell')}>Sell Crypto</button>
-        <button className={`tab ${active==='buy'?'tab--active':''}`} onClick={()=>setActive('buy')}>Buy Crypto</button>
-        <button className={`tab ${active==='giftcard'?'tab--active':''}`} onClick={()=>setActive('giftcard')}>Sell Giftcard</button>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        <button
+          className={tab === 'sell' ? 'btn' : 'pill'}
+          onClick={() => setTab('sell')}
+        >
+          Sell Crypto
+        </button>
+        <button
+          className={tab === 'buy' ? 'btn' : 'pill'}
+          onClick={() => setTab('buy')}
+        >
+          Buy Crypto
+        </button>
+        <button
+          className={tab === 'giftcard' ? 'btn' : 'pill'}
+          onClick={() => setTab('giftcard')}
+        >
+          Sell Giftcard
+        </button>
       </div>
 
-      {active === 'sell'    && <SellForm />}
-      {active === 'buy'     && <BuyForm  />}
-      {active === 'giftcard'&& <GiftcardStub />}
+      {tab === 'sell' && <SellForm />}
+      {tab === 'buy' && <BuyForm />}
+      {tab === 'giftcard' && <GiftcardForm />}
     </main>
   );
 }
 
-/* ---------- SELL ---------- */
 function SellForm() {
   const [amount, setAmount] = useState('');
-  const [coin, setCoin]     = useState('USDT');
-  const [network, setNet]   = useState('TRON-TRC20');
-  const [showModal, setShowModal] = useState(false);
+  const [network, setNetwork] = useState('USDT-TRC20');
 
-  // Your platform wallet address (read-only for users)
-  const platformWallet = 'UQCihj9gc-ySfF17s2h6XgiplYQtACjhfWlB9L9MMRzcuOA6';
-
-  const copyWallet = async () => {
-    try {
-      await navigator.clipboard.writeText(platformWallet);
-      alert('Wallet address copied!');
-    } catch {
-      alert('Copy failed. Long-press to copy.');
-    }
-  };
+  function copyAddr() {
+    navigator.clipboard?.writeText(BNAPX_WALLET);
+    alert('Wallet address copied');
+  }
+  function confirmSent() {
+    // TODO: send to API to create a “Pending” record
+    alert('Thanks! We marked this as Pending. We’ll confirm shortly.');
+  }
 
   return (
-    <form className="trade-form" onSubmit={(e)=>e.preventDefault()}>
+    <section className="card" style={{ padding: 16 }}>
       <h3>Sell Crypto</h3>
 
-      <div className="row">
-        <div className="field">
-          <label className="small">Coin</label>
-          <select value={coin} onChange={e=>setCoin(e.target.value)}>
-            <option>USDT</option>
-            <option>USDC</option>
-            <option>BTC</option>
-            <option>ETH</option>
-            <option>SOL</option>
-            <option>TRX</option>
-            <option>TON</option>
-          </select>
-        </div>
-        <div className="field">
-          <label className="small">Network</label>
-          <select value={network} onChange={e=>setNet(e.target.value)}>
-            {/* common networks */}
-            <option>TRON-TRC20</option>
-            <option>ETH-ERC20</option>
-            <option>BSC-BEP20</option>
-            <option>Polygon</option>
-            <option>Solana</option>
-            <option>TON</option>
-          </select>
-        </div>
+      <label className="small">Network</label>
+      <select value={network} onChange={(e) => setNetwork(e.target.value)}>
+        <option>USDT-TRC20</option>
+        <option>USDT-ERC20</option>
+        <option>USDT-BEP20</option>
+        <option>USDC-ERC20</option>
+        <option>BTC</option>
+      </select>
+
+      <label className="small" style={{ marginTop: 12 }}>Amount (NGN)</label>
+      <input
+        placeholder="3000"
+        value={amount}
+        onChange={(e) => setAmount(e.target.value)}
+      />
+
+      <label className="small" style={{ marginTop: 12 }}>Send to this wallet</label>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <input readOnly value={BNAPX_WALLET} />
+        <button className="pill" type="button" onClick={copyAddr}>Copy</button>
       </div>
 
-      <div className="field">
-        <input
-          type="number"
-          min="0"
-          step="0.0001"
-          placeholder="Enter amount to sell"
-          value={amount}
-          onChange={(e)=>setAmount(e.target.value)}
-          required
-        />
-      </div>
-
-      {/* Display your receiving wallet (read-only) */}
-      <div className="field">
-        <label className="small">Send to this wallet address</label>
-        <div className="wallet-display">
-          <input type="text" value={platformWallet} readOnly />
-          <button type="button" onClick={copyWallet}>Copy</button>
-        </div>
-      </div>
-
-      <button className="btn" type="button" onClick={()=>setShowModal(true)}>
-        I Have Sent
+      <button className="btn" style={{ marginTop: 12 }} onClick={confirmSent}>
+        I have sent
       </button>
-
-      {/* Confirmation Modal */}
-      {showModal && (
-        <Modal onClose={()=>setShowModal(false)}>
-          <h4>Thanks! We’ll verify your transfer</h4>
-          <p className="small">
-            We’ve received your notice for <b>{amount || '—'}</b> {coin} on <b>{network}</b>.
-            Our team will confirm on-chain and update your status shortly.
-          </p>
-          <button className="btn" onClick={()=>setShowModal(false)}>Okay</button>
-        </Modal>
-      )}
-    </form>
+      <p className="small" style={{ color: '#6B7280', marginTop: 8 }}>
+        We’ll verify on-chain and update your status to <b>Paid</b> when confirmed.
+      </p>
+    </section>
   );
 }
 
-/* ---------- BUY ---------- */
 function BuyForm() {
   const [amount, setAmount] = useState('');
-  const [coin, setCoin]     = useState('USDT');
-  const [network, setNet]   = useState('TRON-TRC20');
-  const [destWallet, setDestWallet] = useState('');
+  const [network, setNetwork] = useState('USDT-TRC20');
+  const [dest, setDest] = useState('');
 
-  const onSubmit = (e) => {
-    e.preventDefault();
-    if (!destWallet.trim()) {
-      alert('Please enter your wallet address.');
-      return;
-    }
-    // keep your existing payment flow here
-    alert('Proceeding to payment (test)…');
-  };
+  function createOrder() {
+    // TODO: POST to /api/payments/create
+    alert(`Buy request created for ${amount} on ${network} → ${dest} (Pending)`);
+  }
 
   return (
-    <form className="trade-form" onSubmit={onSubmit}>
+    <section className="card" style={{ padding: 16 }}>
       <h3>Buy Crypto</h3>
 
-      <div className="row">
-        <div className="field">
-          <label className="small">Coin</label>
-          <select value={coin} onChange={e=>setCoin(e.target.value)}>
-            <option>USDT</option>
-            <option>USDC</option>
-            <option>BTC</option>
-            <option>ETH</option>
-            <option>SOL</option>
-            <option>TRX</option>
-            <option>TON</option>
-          </select>
-        </div>
-        <div className="field">
-          <label className="small">Network</label>
-          <select value={network} onChange={e=>setNet(e.target.value)}>
-            <option>TRON-TRC20</option>
-            <option>ETH-ERC20</option>
-            <option>BSC-BEP20</option>
-            <option>Polygon</option>
-            <option>Solana</option>
-            <option>TON</option>
-          </select>
-        </div>
-      </div>
+      <label className="small">Network</label>
+      <select value={network} onChange={(e) => setNetwork(e.target.value)}>
+        <option>USDT-TRC20</option>
+        <option>USDT-ERC20</option>
+        <option>USDT-BEP20</option>
+        <option>USDC-ERC20</option>
+        <option>BTC</option>
+      </select>
 
-      <div className="field">
-        <input
-          type="number"
-          min="0"
-          step="0.0001"
-          placeholder="Enter amount to buy"
-          value={amount}
-          onChange={(e)=>setAmount(e.target.value)}
-          required
-        />
-      </div>
+      <label className="small" style={{ marginTop: 12 }}>Amount (NGN)</label>
+      <input
+        placeholder="3000"
+        value={amount}
+        onChange={(e) => setAmount(e.target.value)}
+      />
 
-      {/* USER wallet address to receive coins */}
-      <div className="field">
-        <label className="small">Your wallet address (receive here)</label>
-        <input
-          type="text"
-          placeholder="Paste wallet address"
-          value={destWallet}
-          onChange={(e)=>setDestWallet(e.target.value)}
-          required
-        />
-      </div>
+      <label className="small" style={{ marginTop: 12 }}>Your wallet address</label>
+      <input
+        placeholder="Paste the address to receive crypto"
+        value={dest}
+        onChange={(e) => setDest(e.target.value)}
+      />
 
-      <button className="btn" type="submit">Proceed to Payment</button>
-    </form>
+      <button className="btn" style={{ marginTop: 12 }} onClick={createOrder}>
+        Create Test Payment
+      </button>
+      <p className="small" style={{ color: '#6B7280', marginTop: 8 }}>
+        We’ll send crypto to your address after payment is confirmed.
+      </p>
+    </section>
   );
 }
 
-/* ---------- Giftcard placeholder (kept minimal for now) ---------- */
-function GiftcardStub() {
+function GiftcardForm() {
   return (
-    <div className="trade-form">
+    <section className="card" style={{ padding: 16 }}>
       <h3>Sell Giftcard</h3>
-      <p className="small">Choose a card and upload details (coming next).</p>
-      <Link href="/trade">Back</Link>
-    </div>
-  );
-}
-
-/* ---------- Generic Modal ---------- */
-function Modal({ children, onClose }) {
-  return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={e=>e.stopPropagation()}>
-        {children}
-        <button className="modal-close" onClick={onClose} aria-label="Close">×</button>
-      </div>
-    </div>
+      <p className="small">Coming soon — UI only placeholder.</p>
+    </section>
   );
 }
 

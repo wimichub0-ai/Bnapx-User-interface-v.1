@@ -20,12 +20,6 @@ export default function Home() {
 
   return (
     <main className={styles.wrap}>
-      {/* … your existing Home JSX exactly as before … */}
-      <TabBar active="home" />
-    </main>
-  );
-}
-
       {/* Top brand header */}
       <section className={styles.brand}>
         <div className={styles.brandRow}>
@@ -46,14 +40,8 @@ export default function Home() {
             <span className={styles.balance}>₦500,000.00</span>
           </div>
           <div className={styles.walletActions}>
-            <button className={styles.actionBtn}>
-              <span className={styles.plus}>＋</span>
-              <span>Add Bank</span>
-            </button>
-            <button className={styles.actionBtn}>
-              <span className={styles.download}>⤓</span>
-              <span>Withdraw</span>
-            </button>
+            <button className={styles.actionBtn}><span className={styles.plus}>＋</span><span>Add Bank</span></button>
+            <button className={styles.actionBtn}><span className={styles.download}>⤓</span><span>Withdraw</span></button>
           </div>
         </div>
       </section>
@@ -93,6 +81,7 @@ export default function Home() {
     </main>
   );
 }
+
 
 
 

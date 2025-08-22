@@ -1,9 +1,9 @@
 :root{
-  --brand:#0C47F9;
-  --brand2:#F6F4FC;
-  --ink:#0A0A0A;
-  --muted:#6B7280;
-  --card:#ffffff;
+  --brand: #0C47F9;
+  --brand-2: #F6F4FC;
+  --muted: #6B7280;
+  --ring: rgba(12,71,249,.15);
+  --card: #ffffff;
 }
 
 :root{--brand:#0C47F9;--bg:#F6F4FC;--text:#0E1525;--muted:#5B6070;--line:#E9ECF3}

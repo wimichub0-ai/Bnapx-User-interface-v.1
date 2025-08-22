@@ -1,171 +1,26 @@
 'use client';
-
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';              // ✅ add this
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 
-export default function Signup() {
-  const router = useRouter();                              // ✅ add this
+export default function Signup(){
+  const router = useRouter();
+  const [email,setEmail] = useState('');
+  const [password,setPassword] = useState('');
+  const [err,setErr] = useState('');
 
-  const [first, setFirst] = useState('');
-  const [last, setLast] = useState('');
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [promo, setPromo] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirm, setConfirm] = useState('');
-
-  const [msg, setMsg] = useState('');
-  const [uErr, setUErr] = useState('');
-  const [uOk, setUOk] = useState('');
-
-  // live username check
-  useEffect(() => {
-    const t = setTimeout(async () => {
-      setUErr('');
-      setUOk('');
-      const v = username.trim().toLowerCase();
-      if (!v) return;
-      if (!/^[a-zA-Z0-9_]{3,16}$/.test(v)) {
-        setUErr('Use 3–16 letters, numbers, underscore.');
-        return;
-      }
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('username')
-        .eq('username', v)
-        .maybeSingle();
-
-      if (error) {
-        setUErr('Could not verify username. Try again.');
-        return;
-      }
-
-      if (data) setUErr('Username already exists');
-      else setUOk('Great — username is available.');
-    }, 350);
-    return () => clearTimeout(t);
-  }, [username]);
-
-  async function onSubmit(e) {
+  async function onSubmit(e){
     e.preventDefault();
-    setMsg('');
+    setErr('');
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) return setErr(error.message);
 
-    if (password !== confirm) {
-      setMsg('Passwords do not match');
-      return;
-    }
-    if (uErr) {
-      setMsg('Fix username issue');
-      return;
-    }
-
-    const uname = username.trim().toLowerCase();
-
-    // 1) Create auth user (email verification OFF recommended for prototype)
-    const { data: sign, error: signErr } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        // store display info in user metadata for greeting
-        data: {
-          full_name: `${first} ${last}`.trim(),
-          username: uname,
-          phone,
-        },
-      },
-    });
-    if (signErr) {
-      setMsg(signErr.message);
-      return;
-    }
-
-    const user = sign.user;
-    if (user) {
-      // 2) Insert profile row (ignore if it already exists)
-      const { error: insertErr } = await supabase.from('profiles').insert({
-        id: user.id,
-        username: uname,
-        first_name: first,
-        last_name: last,
-        phone,
-        promo_code: promo,
-        email, // optional but useful
-      });
-      if (insertErr && insertErr.code !== '23505') {
-        // 23505 = duplicate key, safe to ignore if re-run
-        setMsg('Profile save failed: ' + insertErr.message);
-        return;
-      }
-    }
-
-    // 3) Go home ✅
-    router.push('/');
+    // if email confirmation is OFF, user is already signed in
+    // if it's ON, they must check email (or you can show a message)
+    router.push('/'); // or '/trade'
   }
 
-  return (
-    <main>
-      <div className='header-grad'>
-        <img className='logo' src='/logo-blue.png' alt='BnapX'/>
-        <h2>Let’s create your account</h2>
-        <p className='small'>Create an account for <b>free</b></p>
-      </div>
-
-      <div className='container card'>
-        <form onSubmit={onSubmit}>
-          <div className='row'>
-            <div className='field' style={{flex:1}}>
-              <input placeholder='Firstname' value={first} onChange={e=>setFirst(e.target.value)} required/>
-            </div>
-            <div className='field' style={{flex:1}}>
-              <input placeholder='Lastname' value={last} onChange={e=>setLast(e.target.value)} required/>
-            </div>
-          </div>
-
-          <div className='field'>
-            <input placeholder='@Username' value={username} onChange={e=>setUsername(e.target.value)} required/>
-          </div>
-
-          <div className='field'>
-            <input type='email' placeholder='Email@bnapx.com' value={email} onChange={e=>setEmail(e.target.value)} required/>
-          </div>
-
-          <div className='row'>
-            <div className='field' style={{width:90}}>
-              <input value='+234' readOnly/>
-            </div>
-            <div className='field' style={{flex:1}}>
-              <input placeholder='Phone Number' value={phone} onChange={e=>setPhone(e.target.value)} required/>
-            </div>
-          </div>
-
-          <div className='row'>
-            <div className='field' style={{flex:1}}>
-              <input type='password' placeholder='Password' value={password} onChange={e=>setPassword(e.target.value)} required/>
-            </div>
-            <div className='field' style={{flex:1}}>
-              <input type='password' placeholder='Confirm Password' value={confirm} onChange={e=>setConfirm(e.target.value)} required/>
-            </div>
-          </div>
-
-          <div className='field'>
-            <input placeholder='Promo code (optional)' value={promo} onChange={e=>setPromo(e.target.value)}/>
-          </div>
-
-          {uErr && <div className='small' style={{color:'crimson'}}>{uErr}</div>}
-          {uOk && <div className='small' style={{color:'green'}}>{uOk}</div>}
-          {msg && <div className='small' style={{color:'crimson'}}>{msg}</div>}
-
-          <button className='btn' type='submit'>Create Account</button>
-
-          <div className='small' style={{marginTop:8}}>
-            Already have an account? <Link href='/auth/login'>Login</Link>
-          </div>
-        </form>
-      </div>
-    </main>
-  );
+  return (/* your form UI using onSubmit */);
 }
+
 

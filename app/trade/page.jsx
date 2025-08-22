@@ -1,5 +1,7 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
+
 import { useMemo, useState } from 'react';
 
 /* ---------------- RATES (hardcoded demo) ----------------
@@ -72,7 +74,7 @@ export default function TradePage() {
   );
 }
 
-/* ---------------- SELL ---------------- */
+
 /* ---------------- SELL (USD input) ---------------- */
 function SellCard(){
   const [network, setNetwork] = useState('USDT-TRC20');
@@ -84,6 +86,8 @@ function SellCard(){
   const usdValue = parseAmount(amountUSD);
   const estNaira = useMemo(() => quoteNairaFromUsd(usdValue, network), [usdValue, network]);
   const rateNGN = RATES[network] || 0;
+  const router = useRouter();
+
 
   async function copyAddr() {
     try {
@@ -167,6 +171,7 @@ function BuyCard(){
   const usdValue  = parseAmount(amountUSD);
   const estNaira  = useMemo(() => quoteNairaFromUsd(usdValue, network), [usdValue, network]);
   const rateNGN   = RATES[network] || 0;
+  const router = useRouter();
 
   function createOrder(){
     // Later: POST to /api/payments/create and save to DB with "Pending"
@@ -217,32 +222,66 @@ function BuyCard(){
         </div>
       </div>
 
-      <button className="btn" style={{ marginTop: 10 }} onClick={createOrder}>Proceed</button>
-      <div className="small" style={{ marginTop: 8 }}>
-        We’ll send the crypto to the address above once payment is confirmed.
-      </div>
-    </section>
-  );
-}
+     <button className="btn" style={{ marginTop: 10 }} onClick={async ()=>{
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) { alert('Please login first'); return; }
+  if (!toAddr) { alert('Enter your wallet address'); return; }
+
+  const ref = `TX-${Date.now()}`;
+  const { error } = await supabase.from('trades').insert({
+    user_id: user.id,
+    type: 'buy',
+    network_code: network,
+    asset,
+    usd_amount: usdValue,
+    ngn_amount: estNaira,
+    to_address: toAddr,     // where we will send crypto
+    tx_ref: ref,
+    status: 'pending'
+  });
+
+  if (error) {
+    alert(`Could not create trade: ${error.message}`);
+  } else {
+    router.push('/history?new=1');
+  }
+}}>
+  Proceed
+</button>
 
 
 /* ---------------- Modal ---------------- */
-function ConfirmModal({ title, desc, onClose, onConfirm }) {
-  return (
-    <div className="modal-backdrop">
-      <div className="modal">
-        <button className="modal-close" onClick={onClose}>×</button>
-        <h3>{title}</h3>
-        <p>{desc}</p>
-        <div className="actions">
-          <button className="cancel" onClick={onClose}>Cancel</button>
-          <button className="confirm" onClick={onConfirm}>Confirm</button>
-        </div>
-      </div>
-    </div>
-  );
-}
+{confirmOpen && (
+  <ConfirmModal
+    title="Confirm transfer"
+    desc={`You’re confirming a ${asset} transfer on ${network} for $${usdValue.toLocaleString()}. We’ll mark this as Pending.`}
+    onClose={()=>setConfirmOpen(false)}
+    onConfirm={async ()=>{
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { alert('Please login first'); return; }
 
+      const ref = `TX-${Date.now()}`;
+      const { error } = await supabase.from('trades').insert({
+        user_id: user.id,
+        type: 'sell',
+        network_code: network,
+        asset,
+        usd_amount: usdValue,
+        ngn_amount: estNaira,
+        to_address: BNAPX_WALLET,
+        tx_ref: ref,
+        status: 'pending'
+      });
+
+      if (error) {
+        alert(`Could not create trade: ${error.message}`);
+      } else {
+        setConfirmOpen(false);
+        router.push('/history?new=1');
+      }
+    }}
+  />
+)}
 
 
 

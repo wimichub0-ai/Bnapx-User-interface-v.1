@@ -23,13 +23,14 @@ const NETWORKS = [
 
 const BNAPX_WALLET = 'UQCihj9gc-ySfF17s2h6XgiplYQtACjhfWlB9L9MMRzcuOA6';
 
-/* ---------------- Helpers ---------------- */
-function quoteNairaFromUsd(usd, networkCode) {
-  const rate = RATES[networkCode]; // already "₦ per 1 asset"
-  if (!rate || rate <= 0) return 0;
-  return usd * rate; // 1 USDT * rate = ₦
-}
-
+/* ---------------- Helpers (USD -> NGN) ---------------- */
+function formatNaira(n) {
+  if (!isFinite(n)) return '₦0';
+  try {
+    return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 2 }).format(n);
+  } catch {
+    return `₦${Number(n).toLocaleString()}`;
+  }
 }
 function formatCrypto(n, asset) {
   if (!isFinite(n)) return `0 ${asset}`;
@@ -43,14 +44,11 @@ function parseAmount(input) {
   return Number.isFinite(num) ? num : 0;
 }
 
-/* Quote calculators:
-   - For SELL: user types NGN; we show crypto = NGN / rate
-   - For BUY:  user types NGN; we show crypto = NGN / rate (what they’ll receive)
-   (If later you want BUY to be “enter crypto”, just swap.) */
-function quoteCryptoFromNaira(naira, networkCode) {
-  const rate = RATES[networkCode];
+/** Convert user USD input to NGN using the selected network’s rate */
+function quoteNairaFromUsd(usd, networkCode) {
+  const rate = RATES[networkCode]; // ₦ per 1 unit (USDT/USDC/BTC…)
   if (!rate || rate <= 0) return 0;
-  return naira / rate;
+  return usd * rate;
 }
 
 /* ---------------- Page ---------------- */
@@ -75,9 +73,10 @@ export default function TradePage() {
 }
 
 /* ---------------- SELL ---------------- */
+/* ---------------- SELL (USD input) ---------------- */
 function SellCard(){
   const [network, setNetwork] = useState('USDT-TRC20');
-  const [amountUSD, setAmountUSD] = useState('');
+  const [amountUSD, setAmountUSD] = useState(''); // user types USD
   const [copied, setCopied] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -96,14 +95,14 @@ function SellCard(){
 
   return (
     <section className="card-lite" style={{ marginTop: 12 }}>
-      <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}>
-        <div style={{ fontSize:18, fontWeight:800 }}>Sell Crypto</div>
-        <span className="small" style={{background:'var(--bg)',padding:'6px 10px',borderRadius:999,color:'var(--brand)'}}>Instant</span>
+      <div style={{ display: 'flex', alignItems:'center', justifyContent:'space-between', marginBottom: 8 }}>
+        <div style={{ fontSize: 18, fontWeight: 800 }}>Sell Crypto</div>
+        <span className="small" style={{ background:'var(--bg)', padding:'6px 10px', borderRadius: 999, color:'var(--brand)' }}>Instant</span>
       </div>
 
       <div className="grid">
         <div>
-          <div className="small" style={{fontWeight:700,marginBottom:6}}>Network</div>
+          <div className="small" style={{ fontWeight: 700, marginBottom: 6 }}>Network</div>
           <div className="field">
             <select value={network} onChange={e=>setNetwork(e.target.value)}>
               {NETWORKS.map(n => <option key={n.code} value={n.code}>{n.label}</option>)}
@@ -112,72 +111,78 @@ function SellCard(){
         </div>
 
         <div>
-          <div className="small" style={{fontWeight:700,marginBottom:6}}>Amount (USD)</div>
+          <div className="small" style={{ fontWeight: 700, marginBottom: 6 }}>Amount (USD)</div>
           <div className="field">
+            <span style={{opacity:.6}}>$</span>
             <input
-              placeholder="$ 0.00"
+              placeholder="0.00"
               inputMode="decimal"
               value={amountUSD}
               onChange={e=>setAmountUSD(e.target.value)}
             />
           </div>
-          <div className="small" style={{marginTop:6}}>
+          <div className="small" style={{ marginTop: 6 }}>
             Rate: <b>{formatNaira(rateNGN)}</b> per 1 {asset}
           </div>
-          <div className="small" style={{marginTop:2}}>
+          <div className="small" style={{ marginTop: 2 }}>
             You’ll receive approx: <b>{formatNaira(estNaira)}</b>
           </div>
         </div>
       </div>
 
-      <div style={{marginTop:10}}>
-        <div className="small" style={{fontWeight:700,marginBottom:6}}>Send to this wallet</div>
+      <div style={{ marginTop: 10 }}>
+        <div className="small" style={{ fontWeight: 700, marginBottom: 6 }}>Send to this wallet</div>
         <div className="wallet-display">
           <input readOnly value={BNAPX_WALLET} />
-          <button className="tabbtn" type="button" onClick={copyAddr}>
+          <button className="tabbtn" type="button" onClick={copyAddr} style={{ whiteSpace:'nowrap' }}>
             {copied ? 'Copied' : 'Copy'}
           </button>
         </div>
       </div>
 
-      <button className="btn" style={{marginTop:12}} onClick={()=>setConfirmOpen(true)}>I have sent</button>
+      <button className="btn" style={{ marginTop: 12 }} onClick={()=>setConfirmOpen(true)}>I have sent</button>
+      <div className="small" style={{ marginTop: 8 }}>
+        We’ll verify on-chain and update your status to <b>Paid</b> when confirmed.
+      </div>
+
       {confirmOpen && (
         <ConfirmModal
           title="Confirm transfer"
-          desc={`Confirm you sent ${amountUSD} USD worth of ${asset}. We'll mark as Pending.`}
+          desc={`You’re confirming a ${asset} transfer on ${network} for $${usdValue.toLocaleString()}. We’ll mark this trade as Pending and notify you when it’s confirmed.`}
           onClose={()=>setConfirmOpen(false)}
           onConfirm={()=>{ setConfirmOpen(false); alert('Marked as Pending'); }}
         />
       )}
     </section>
   );
-}
+} 
 
-
-/* ---------------- BUY ---------------- */
+/* ---------------- BUY (USD input) ---------------- */
 function BuyCard(){
   const [network, setNetwork] = useState('USDT-TRC20');
-  const [amountUSD, setAmountUSD] = useState('');
-  const [toAddr, setToAddr] = useState('');
+  const [amountUSD, setAmountUSD] = useState('');   // user types USD
+  const [toAddr, setToAddr]     = useState('');
 
   const asset = useMemo(() => NETWORKS.find(n => n.code === network)?.asset || 'USDT', [network]);
-  const usdValue = parseAmount(amountUSD);
-  const estNaira = useMemo(() => quoteNairaFromUsd(usdValue, network), [usdValue, network]);
-  const rateNGN = RATES[network] || 0;
+  const usdValue  = parseAmount(amountUSD);
+  const estNaira  = useMemo(() => quoteNairaFromUsd(usdValue, network), [usdValue, network]);
+  const rateNGN   = RATES[network] || 0;
 
   function createOrder(){
-    alert(`Buy request: $${usdValue} on ${network} → ${toAddr}\nYou'll pay: ${formatNaira(estNaira)} (Pending)`);
+    // Later: POST to /api/payments/create and save to DB with "Pending"
+    alert(`Buy request: $${usdValue.toLocaleString()} on ${network} → ${toAddr}\nYou’ll pay: ${formatNaira(estNaira)} (Pending)`);
   }
 
   return (
-    <section className="card-lite" style={{marginTop:12}}>
-      <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}>
-        <div style={{ fontSize:18, fontWeight:800 }}>Buy Crypto</div>
+    <section className="card-lite" style={{ marginTop: 12 }}>
+      <div style={{ display: 'flex', alignItems:'center', justifyContent:'space-between', marginBottom: 8 }}>
+        <div style={{ fontSize: 18, fontWeight: 800 }}>Buy Crypto</div>
+        <span className="small" style={{ background:'var(--bg)', padding:'6px 10px', borderRadius: 999, color:'var(--brand)' }}>Best rates</span>
       </div>
 
       <div className="grid">
         <div>
-          <div className="small" style={{fontWeight:700,marginBottom:6}}>Network</div>
+          <div className="small" style={{ fontWeight: 700, marginBottom: 6 }}>Network</div>
           <div className="field">
             <select value={network} onChange={e=>setNetwork(e.target.value)}>
               {NETWORKS.map(n => <option key={n.code} value={n.code}>{n.label}</option>)}
@@ -186,49 +191,40 @@ function BuyCard(){
         </div>
 
         <div>
-          <div className="small" style={{fontWeight:700,marginBottom:6}}>Amount (USD)</div>
+          <div className="small" style={{ fontWeight: 700, marginBottom: 6 }}>Amount (USD)</div>
           <div className="field">
+            <span style={{opacity:.6}}>$</span>
             <input
-              placeholder="$ 0.00"
+              placeholder="0.00"
               inputMode="decimal"
               value={amountUSD}
               onChange={e=>setAmountUSD(e.target.value)}
             />
           </div>
-          <div className="small" style={{marginTop:6}}>
+          <div className="small" style={{ marginTop: 6 }}>
             Rate: <b>{formatNaira(rateNGN)}</b> per 1 {asset}
           </div>
-          <div className="small" style={{marginTop:2}}>
+          <div className="small" style={{ marginTop: 2 }}>
             You’ll pay approx: <b>{formatNaira(estNaira)}</b>
           </div>
         </div>
       </div>
 
-      <div style={{marginTop:8}}>
-        <div className="small" style={{fontWeight:700,marginBottom:6}}>Your wallet address (receive)</div>
+      <div style={{ marginTop: 8 }}>
+        <div className="small" style={{ fontWeight: 700, marginBottom: 6 }}>Your wallet address (receive)</div>
         <div className="field">
-          <input placeholder="Paste your wallet address" value={toAddr} onChange={e=>setToAddr(e.target.value)} />
+          <input placeholder="Paste the wallet to receive crypto" value={toAddr} onChange={e=>setToAddr(e.target.value)} />
         </div>
       </div>
 
-      <button className="btn" style={{marginTop:10}} onClick={createOrder}>Proceed</button>
-    </section>
-  );
-}
-
-
-/* ---------------- GIFTCARD (placeholder) ---------------- */
-function GiftcardCard(){
-  return (
-    <section className="card-lite" style={{ marginTop: 12 }}>
-      <div style={{ display: 'flex', alignItems:'center', justifyContent:'space-between', marginBottom: 8 }}>
-        <div style={{ fontSize: 18, fontWeight: 800 }}>Sell Giftcard</div>
-        <span className="small" style={{ background:'var(--bg)', padding:'6px 10px', borderRadius: 999, color:'var(--brand)' }}>Coming soon</span>
+      <button className="btn" style={{ marginTop: 10 }} onClick={createOrder}>Proceed</button>
+      <div className="small" style={{ marginTop: 8 }}>
+        We’ll send the crypto to the address above once payment is confirmed.
       </div>
-      <div className="small">UI will match your giftcard flow with logos, categories, and rates.</div>
     </section>
   );
 }
+
 
 /* ---------------- Modal ---------------- */
 function ConfirmModal({ title, desc, onClose, onConfirm }) {

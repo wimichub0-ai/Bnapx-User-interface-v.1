@@ -42,7 +42,7 @@ export default function Signup() {
       });
     }
 
-    r.push('/'); // go to Home after sign up
+ r.push('/home'); // go to Home after sign up
   }
 
   return (

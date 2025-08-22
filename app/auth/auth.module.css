@@ -1,60 +1,38 @@
-:root{
-  --brand:#0C47F9;
-  --brand-soft:#F6F4FC;
-  --ink:#0E1525;
-  --muted:#667085;
-  --line:#E7EAF3;
-  --radius:14px;
-}
+/* app/auth/auth.module.css */
+/* Component-scoped styles only. Variables live in app/globals.css */
 
-/* ---------- Onboarding ---------- */
-.shell{min-height:100dvh;background:#0C47F9;display:flex;flex-direction:column;}
-.heroTop{padding:36px 24px 0;display:grid;place-items:center;}
-.logo{width:44px;height:auto;}
+.wrap{max-width:480px;margin:0 auto;padding:16px}
+
+.hero{
+  background:linear-gradient(180deg,var(--brand),#2E69FF 100%);
+  color:#fff;
+  border-bottom-left-radius:28px;
+  border-bottom-right-radius:28px;
+  padding:28px 20px 56px;
+}
 
 .card{
-  margin:24px 16px;
-  background:#fff;border-radius:24px 24px 32px 32px;
-  padding:20px 16px 22px;box-shadow:0 20px 50px rgba(0,0,0,.08);
+  margin-top:-32px;
+  background:#fff;
+  border-radius:16px;
+  border:1px solid #E7EAF3;
+  box-shadow:0 12px 30px rgba(12,71,249,.08);
+  padding:16px;
 }
-.illus{width:100%;height:auto;border-radius:16px;margin-bottom:10px;object-fit:cover}
-.h2{font-size:18px;font-weight:800;letter-spacing:.3px;margin:4px 0 6px;color:#111827}
-.p{color:#475467;line-height:1.45;margin:0 0 14px}
-.actions{display:grid;gap:10px}
-.primaryBtn, .secondaryBtn{
-  display:grid;place-items:center;height:48px;border-radius:12px;font-weight:700;text-decoration:none;
+
+.field{
+  display:flex;gap:10px;align-items:center;
+  border:1px solid #E7EAF3;border-radius:12px;
+  padding:10px 12px;background:#fff;margin:8px 0;
 }
-.primaryBtn{background:var(--brand);color:#fff}
-.secondaryBtn{background:#e9efff;color:#0C47F9}
+.field input{flex:1;border:0;outline:0;background:transparent;height:40px;font-size:16px}
 
-/* ---------- Forms ---------- */
-.formShell{min-height:100dvh;background:#fff;position:relative}
-.gradTop{height:180px;background:linear-gradient(180deg,#0C47F9 0%, rgba(12,71,249,.05) 100%)}
-.title{margin:-90px 16px 4px;font-size:22px;font-weight:800;color:#0f172a}
-.sub{margin:0 16px 10px;color:#667085}
-.link{color:#0C47F9;text-decoration:none}
-.form{padding:0 16px 24px}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.input{
-  width:100%;height:55px;border:1px solid var(--line);border-radius:12px;
-  padding:0 12px;font-size:16px;background:#fff;outline:0;
+.btnPrimary{
+  width:100%;height:48px;border:0;border-radius:12px;
+  background:var(--brand);color:#fff;font-weight:700;
 }
-.code{max-width:92px;text-align:center;background:#fafbff}
-.optRow{margin:8px 2px 2px}
-.checkRow{display:flex;gap:8px;align-items:center;color:#1f2937;font-size:14px}
-.metaRow{display:flex;justify-content:flex-end;margin:6px 2px}
-.forgot{color:#ef4444;text-decoration:none;font-size:12px}
-.error{margin-top:8px;color:#b91c1c;font-size:13px}
-.smallCenter{font-size:13px;color:#667085;text-align:center;margin-top:10px}
-
-.avatarWrap{position:absolute;left:0;right:0;top:110px;display:grid;place-items:center}
-.avatar{width:56px;height:56px;border-radius:50%;border:3px solid #fff;box-shadow:0 6px 20px rgba(0,0,0,.12)}
-
-.faceIdWrap{display:grid;place-items:center;margin-top:16px}
-.faceId{width:44px;height:44px}
-
-/* Mobile niceties */
-@media (min-width:480px){
-  .card{max-width:420px;margin:24px auto}
-  .form{max-width:480px;margin:0 auto}
+.btnGhost{
+  width:100%;height:48px;border:1px solid #E7EAF3;border-radius:12px;
+  background:#fff;color:#0b1220;font-weight:700;
 }
+

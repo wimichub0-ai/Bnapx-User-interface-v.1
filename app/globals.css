@@ -1,9 +1,16 @@
 :root{
   --brand: #0C47F9;
   --brand-2: #F6F4FC;
-  --muted: #6B7280;
+  --bg: #F6F4FC;
+  --text: #0E1525;
+  --muted: #6B7280; /* choose one (or keep your preferred) */
+  --line: #E9ECF3;
   --ring: rgba(12,71,249,.15);
   --card: #ffffff;
+  --bnapx-blue:#0C47F9;
+  --bnapx-soft:#F6F4FC;
+  --ink:#0f172a;
+  --radius:20px;
 }
 
 :root{--brand:#0C47F9;--bg:#F6F4FC;--text:#0E1525;--muted:#5B6070;--line:#E9ECF3}
@@ -29,15 +36,7 @@
 .tabbtn{flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;font-weight:600}
 .tabbtn.active{background:#EEF2FF;color:#0C47F9;border-color:#C7D2FE}
 .balance{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:10px}
-:root{
-  --bnapx-blue:#0C47F9;
-  --bnapx-soft:#F6F4FC;
-  --ink:#0f172a;
-  --muted:#64748b;
-  --line:#e5e7eb;
-  --card:#ffffff;
-  --radius:20px;
-}
+
 
 /* hero */
 .home-hero{

@@ -1,4 +1,19 @@
 'use client';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabaseClient';
+
+export default function HomePage(){
+  const router = useRouter();
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) router.replace('/auth/login');
+    });
+  }, [router]);
+
+  // ...rest of the page
+}
+
 
 import { useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';

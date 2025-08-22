@@ -126,15 +126,18 @@ function SellCard(){
         </div>
       </div>
 
-      <div style={{ marginTop: 10 }}>
-        <div className="small" style={{ fontWeight: 700, marginBottom: 6 }}>Send to this wallet</div>
-        <div className="wallet-display">
-          <input readOnly value={BNAPX_WALLET} />
-          <button className="tabbtn" type="button" onClick={copyAddr} style={{ whiteSpace:'nowrap' }}>
-            {copied ? 'Copied' : 'Copy'}
-          </button>
-        </div>
-      </div>
+     <div style={{ marginTop: 10 }}>
+  <div className="small" style={{ fontWeight: 700, marginBottom: 6 }}>
+    Send to this wallet
+  </div>
+  <div className="wallet-display">
+    <input readOnly value={BNAPX_WALLET} />
+    <button className="copy-btn" type="button" onClick={copyAddr}>
+      {copied ? 'Copied' : 'Copy'}
+    </button>
+  </div>
+</div>
+
 
       <button className="btn" style={{ marginTop: 12 }} onClick={()=>setConfirmOpen(true)}>I have sent</button>
       <div className="small" style={{ marginTop: 8 }}>
@@ -225,12 +228,18 @@ function BuyCard(){
         </div>
       </div>
 
-      <div style={{ marginTop: 8 }}>
-        <div className="small" style={{ fontWeight: 700, marginBottom: 6 }}>Your wallet address (receive)</div>
-        <div className="field">
-          <input placeholder="Paste the wallet to receive crypto" value={toAddr} onChange={e=>setToAddr(e.target.value)} />
-        </div>
-      </div>
+     <div style={{ marginTop: 8 }}>
+  <div className="small" style={{ fontWeight: 700, marginBottom: 6 }}>
+    Your wallet address (receive)
+  </div>
+  <div className="wallet-display">
+    <input
+      placeholder="Paste the wallet to receive crypto"
+      value={toAddr}
+      onChange={e=>setToAddr(e.target.value)}
+    />
+  </div>
+</div>
 
       <button
         className="btn"

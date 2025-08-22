@@ -15,7 +15,7 @@ export default function Login() {
     e.preventDefault(); setMsg('');
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return setMsg(error.message);
-    r.push('/'); // Home
+   r.push('/home');
   }
 
   return (

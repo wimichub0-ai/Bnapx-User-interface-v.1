@@ -12,6 +12,40 @@
   --ink:#0f172a;
   --radius:20px;
 }
+/* Wallet input + Copy button combo */
+.wallet-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wallet-display input {
+  flex: 1;
+  height: 55px;
+  border: 1px solid #E7EAF3;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 14px;
+}
+
+/* Copy Button */
+.copy-btn {
+  width: 80px;
+  height: 38px;
+  border: none;
+  border-radius: 8px;       /* rounded corners */
+  background: #F6F4FC;      /* soft gray-blue background */
+  color: #0C47F9;           /* brand blue text */
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.copy-btn:hover {
+  background: #e2e6fb;      /* slightly darker hover */
+}
+
 
 :root{--brand:#0C47F9;--bg:#F6F4FC;--text:#0E1525;--muted:#5B6070;--line:#E9ECF3}
 *{box-sizing:border-box} html,body{margin:0;padding:0;background:#fff;color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial}

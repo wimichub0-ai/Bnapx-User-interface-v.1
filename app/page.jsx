@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import styles from './auth.module.css';
+import styles from './auth/auth.module.css'
 
 export default function AuthLanding() {
   return (

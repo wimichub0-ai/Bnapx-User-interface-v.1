@@ -1,45 +1,43 @@
+// app/history/page.jsx
 'use client';
-import { useEffect } from 'react';
+
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 
-export default function HomePage(){
+export default function HistoryPage() {
   const router = useRouter();
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) router.replace('/auth/login');
-    });
-  }, [router]);
-
-  // ...rest of the page
-}
-
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
-
-export default function HistoryPage(){
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(()=>{
-    async function load(){
-      setLoading(true);
-      const { data: auth } = await supabase.auth.getUser();
-      const user = auth?.user;
-      if (!user) { setRows([]); setLoading(false); return; }
+  // Lightweight auth guard + data fetch
+  useEffect(() => {
+    let mounted = true;
 
+    async function run() {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        router.replace('/auth/login');
+        return;
+      }
+
+      const userId = sessionData.session.user.id;
       const { data, error } = await supabase
         .from('trades')
         .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending:false });
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
 
-      if (error) console.error(error);
-      setRows(data || []);
-      setLoading(false);
+      if (mounted) {
+        if (error) console.error(error);
+        setRows(data || []);
+        setLoading(false);
+      }
     }
-    load();
-  },[]);
+
+    run();
+    return () => { mounted = false; };
+  }, [router]);
 
   if (loading) return <main className="container"><p>Loading…</p></main>;
   if (!rows.length) return <main className="container"><h2>Transaction History</h2><p className="small">No trades yet.</p></main>;
@@ -52,7 +50,8 @@ export default function HistoryPage(){
           <div key={r.id} style={{padding:'12px 16px', borderBottom:'1px solid #E7EAF3'}}>
             <div style={{display:'flex', justifyContent:'space-between', fontWeight:700}}>
               <span>{r.type.toUpperCase()} • {r.asset} ({r.network_code})</span>
-              <span style={{textTransform:'capitalize',
+              <span style={{
+                textTransform:'capitalize',
                 color: r.status==='pending' ? '#b45309' :
                        r.status==='paid' ? '#0ea5e9' :
                        r.status==='completed' ? '#16a34a' : '#dc2626'
@@ -70,4 +69,5 @@ export default function HistoryPage(){
     </main>
   );
 }
+
 

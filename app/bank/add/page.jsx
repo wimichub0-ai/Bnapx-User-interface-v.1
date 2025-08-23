@@ -5,178 +5,114 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 
 const BANKS = [
-  { code: 'opal', name: 'Opay Bank' },
-  { code: 'moniepoint', name: 'Moniepoint' },
-  { code: 'kuda', name: 'Kuda' },
-  { code: 'access', name: 'Access Bank' },
-  { code: 'gtb', name: 'GTBank' },
-  { code: 'zenith', name: 'Zenith Bank' },
-  { code: 'first', name: 'First Bank' },
-  { code: 'uba', name: 'UBA' },
-  { code: 'palmpay', name: 'Palmpay' },
-  { code: 'fidelity', name: 'Fidelity Bank' },
-  { code: 'polaris', name: 'Polaris Bank' },
-  { code: 'fcmb', name: 'FCMB' },
-  { code: 'sterling', name: 'Sterling Bank' },
-  { code: 'wema', name: 'Wema Bank' },
+  'Access Bank', 'Fidelity Bank', 'FCMB', 'First Bank', 'GTBank',
+  'Keystone Bank', 'Kuda Bank', 'Moniepoint MFB', 'Opay', 'Polaris Bank',
+  'Providus Bank', 'Stanbic IBTC', 'Sterling Bank', 'UBA', 'Union Bank',
+  'Unity Bank', 'Wema Bank', 'Zenith Bank'
 ];
 
 export default function AddBankPage() {
   const router = useRouter();
-  const [bankCode, setBankCode] = useState('');
-  const [accountNo, setAccountNo] = useState('');
+  const [userId, setUserId] = useState(null);
+
+  const [bankName, setBankName] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
   const [accountName, setAccountName] = useState('');
   const [saving, setSaving] = useState(false);
 
-  // Redirect unauthenticated users to /auth/login (optional)
   useEffect(() => {
+    // Require auth; if not logged in, send to login
     supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) router.replace('/auth/login');
+      const uid = data?.session?.user?.id;
+      if (!uid) router.replace('/auth/login');
+      else setUserId(uid);
     });
   }, [router]);
 
-  async function handleSave() {
-    if (!bankCode || !accountNo || !accountName) {
-      alert('Please select a bank and enter both Account Number and Account Name.');
-      return;
-    }
-    if (accountNo.length < 6) {
-      alert('Account number looks too short.');
+  async function saveBank(e) {
+    e.preventDefault();
+    if (!userId) return;
+    if (!bankName || !accountNumber || !accountName) {
+      alert('Please fill all fields.');
       return;
     }
 
     setSaving(true);
-    try {
-      const { data: auth } = await supabase.auth.getUser();
-      const user = auth?.user;
-      if (!user) {
-        alert('You must be logged in.');
-        setSaving(false);
-        return;
-      }
+    const { error } = await supabase.from('banks').insert({
+      user_id: userId,
+      bank_name: bankName,
+      account_number: accountNumber,
+      account_name: accountName
+    });
+    setSaving(false);
 
-      const bank = BANKS.find(b => b.code === bankCode);
-      const { error } = await supabase.from('user_banks').insert({
-        user_id: user.id,
-        bank_code: bank.code,
-        bank_name: bank.name,
-        account_number: accountNo,
-        account_name: accountName,
-      });
-
-      if (error) {
-        console.error(error);
-        alert('Could not save bank. Please try again.');
-      } else {
-        alert('Bank saved!');
-        // go back to withdraw screen or wherever you want
-        router.push('/withdraw'); // change if your route differs
-      }
-    } finally {
-      setSaving(false);
+    if (error) {
+      alert(`Could not save bank: ${error.message}`);
+      return;
     }
+    alert('Bank saved.');
+    router.replace('/withdraw'); // go pick it for withdrawal
   }
 
+  // styles
+  const page = { maxWidth: 480, margin:'0 auto', padding:16, background:'#F6F4FC', minHeight:'100dvh' };
+  const h  = { fontWeight:800, color:'#0E1525', textAlign:'center', margin:'8px 0 16px' };
+  const field = {
+    width: '100%', maxWidth: 406, height: 71, borderRadius: 12,
+    border: '1px solid #E7EAF3', background:'#fff',
+    padding: '0 14px', fontSize: 16, outline: 'none'
+  };
+  const row = { display:'flex', justifyContent:'center', margin:'8px 0' };
+  const btn = {
+    width: '100%', maxWidth: 409, height: 55, borderRadius: 12,
+    background:'#2864F8', color:'#fff', border:0, fontWeight:700,
+    display:'grid', placeItems:'center', cursor:'pointer'
+  };
+  const card = {
+    background:'#fff', border:'1px solid #E7EAF3', borderRadius:16, padding:16,
+    boxShadow:'0 8px 24px rgba(16,24,40,.06)'
+  };
+
   return (
-    <main style={wrap}>
-      <header style={header}>
-        <button onClick={() => router.back()} style={backBtn}>‹</button>
-        <h2 style={title}>Add Bank</h2>
-        <div style={{ width: 24 }} />
-      </header>
+    <main style={page}>
+      <h2 style={h}>Add Bank</h2>
 
-      <section style={{ marginTop: 8 }}>
-        {/* Bank select */}
-        <div style={fieldWrap}>
-          <select
-            value={bankCode}
-            onChange={e => setBankCode(e.target.value)}
-            style={inputStyle}
-          >
-            <option value="">Select Bank</option>
-            {BANKS.map(b => (
-              <option key={b.code} value={b.code}>{b.name}</option>
-            ))}
-          </select>
-        </div>
+      <section style={card}>
+        <form onSubmit={saveBank}>
+          <div style={row}>
+            <select value={bankName} onChange={e=>setBankName(e.target.value)} style={field}>
+              <option value="">Select Bank</option>
+              {BANKS.map(b => <option key={b} value={b}>{b}</option>)}
+            </select>
+          </div>
 
-        {/* Account number */}
-        <div style={fieldWrap}>
-          <input
-            inputMode="numeric"
-            placeholder="Enter Account Number"
-            value={accountNo}
-            onChange={e => setAccountNo(e.target.value.replace(/[^\d]/g,''))}
-            style={inputStyle}
-          />
-        </div>
+          <div style={row}>
+            <input
+              style={field}
+              inputMode="numeric"
+              placeholder="Enter Account Number"
+              value={accountNumber}
+              onChange={e=>setAccountNumber(e.target.value.replace(/[^\d]/g,''))}
+              maxLength={20}
+            />
+          </div>
 
-        {/* Account name (typed by user for now) */}
-        <div style={fieldWrap}>
-          <input
-            placeholder="Account Name"
-            value={accountName}
-            onChange={e => setAccountName(e.target.value)}
-            style={inputStyle}
-          />
-        </div>
+          <div style={row}>
+            <input
+              style={field}
+              placeholder="Account Name"
+              value={accountName}
+              onChange={e=>setAccountName(e.target.value)}
+            />
+          </div>
 
-        <button style={primaryBtn} onClick={handleSave} disabled={saving}>
-          {saving ? 'Saving…' : 'Add'}
-        </button>
+          <div style={{display:'flex', justifyContent:'center', marginTop:12}}>
+            <button type="submit" style={btn} disabled={saving}>
+              {saving ? 'Saving…' : 'Add'}
+            </button>
+          </div>
+        </form>
       </section>
     </main>
   );
 }
-
-/* ---------- inline styles ---------- */
-const wrap = {
-  maxWidth: 480,
-  margin: '0 auto',
-  minHeight: '100vh',
-  background: '#F6F4FC',
-  padding: '16px',
-};
-
-const header = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  marginBottom: 8,
-};
-
-const backBtn = {
-  width: 24, height: 24,
-  borderRadius: 999,
-  border: '1px solid #E6EAF2',
-  background: '#fff',
-  display: 'grid',
-  placeItems: 'center',
-  fontSize: 18,
-  cursor: 'pointer'
-};
-
-const title = { margin: 0, fontSize: 20, fontWeight: 800, color: '#0C47F9' };
-
-const fieldWrap = { margin: '10px 0', display:'flex', justifyContent:'center' };
-
-const inputStyle = {
-  width: '406px', height: '71px', maxWidth: '100%',
-  background: '#fff',
-  border: '1px solid #E6EAF2',
-  borderRadius: 12,
-  padding: '12px 14px',
-  fontSize: 16,
-  outline: 'none',
-};
-
-const primaryBtn = {
-  width: '409px', height: '55px', maxWidth: '100%',
-  background: '#2864F8',
-  color: '#fff',
-  fontWeight: 700,
-  border: 0,
-  borderRadius: 12,
-  marginTop: 14,
-  cursor: 'pointer',
-};

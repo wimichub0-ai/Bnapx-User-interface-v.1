@@ -1,89 +1,105 @@
 'use client';
-import { useState } from 'react';
+
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
-import styles from '../auth.module.css';
+import Image from 'next/image';
 
-export default function Signup() {
-  const r = useRouter();
-  const [form, setForm] = useState({
-    first: '', last: '', username: '',
-    email: '', phone: '', password: '', confirm: '',
-    promo: '', agree: true
-  });
-  const [msg, setMsg] = useState('');
-
-  function up(k, v) { setForm(s => ({ ...s, [k]: v })); }
-
-  async function onSubmit(e) {
-    e.preventDefault(); setMsg('');
-    if (!form.agree) return setMsg('Please agree to Terms & Conditions.');
-    if (form.password !== form.confirm) return setMsg('Passwords do not match');
-
-    const { data, error } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
-      options: {
-        data: { full_name: `${form.first} ${form.last}`, username: form.username, phone: form.phone, promo: form.promo }
-      }
-    });
-    if (error) return setMsg(error.message);
-
-    // Optional: create a profile row (ignore if you already have triggers)
-    if (data.user) {
-      await supabase.from('profiles').upsert({
-        id: data.user.id,
-        first_name: form.first,
-        last_name: form.last,
-        username: form.username?.toLowerCase(),
-        phone: form.phone,
-        promo_code: form.promo
-      });
-    }
-
- r.push('/home'); // go to Home after sign up
-  }
-
+export default function SignupPage() {
   return (
-    <main className={styles.formShell}>
-      <div className={styles.gradTop} />
-      <h2 className={styles.title}>Let create your account</h2>
-      <p className={styles.sub}>Kindly create an account for <b className={styles.link}>free</b></p>
+    <main className="screen">
+      <header className="topbar">
+        <Link href="/" className="backBtn" aria-label="Back">←</Link>
+        <Image src="/logo.svg" alt="BnapX" width={28} height={28} priority />
+      </header>
 
-      <form onSubmit={onSubmit} className={styles.form}>
-        <div className={styles.row2}>
-          <input className={styles.input} placeholder="Firstname" value={form.first} onChange={e=>up('first',e.target.value)} required />
-          <input className={styles.input} placeholder="Lastname"  value={form.last}  onChange={e=>up('last', e.target.value)} required />
-        </div>
+      <section className="card">
+        <h1 className="title">Let’s create your account</h1>
+        <p className="sub">Kindly create an account for <b className="link">free</b></p>
 
-        <input className={styles.input} placeholder="@Username" value={form.username} onChange={e=>up('username',e.target.value)} required />
-        <input className={styles.input} type="email" placeholder="Email@bnapx.com" value={form.email} onChange={e=>up('email',e.target.value)} required />
+        <form className="form" onSubmit={(e)=>e.preventDefault()}>
+          <div className="field"><input placeholder="Firstname" /></div>
+          <div className="field"><input placeholder="Lastname" /></div>
+          <div className="field"><input placeholder="@Username" /></div>
+          <div className="field"><input type="email" placeholder="Email address" /></div>
 
-        <div className={styles.row2}>
-          <input className={`${styles.input} ${styles.code}`} value="+234" readOnly />
-          <input className={styles.input} placeholder="Phone Number" value={form.phone} onChange={e=>up('phone',e.target.value)} required />
-        </div>
+          <div className="row2">
+            <div className="field"><input placeholder="+234" defaultValue="+234" /></div>
+            <div className="field"><input placeholder="Phone number" /></div>
+          </div>
 
-        <div className={styles.row2}>
-          <input className={styles.input} type="password" placeholder="Password" value={form.password} onChange={e=>up('password',e.target.value)} required />
-          <input className={styles.input} type="password" placeholder="Confirm Password" value={form.confirm} onChange={e=>up('confirm',e.target.value)} required />
-        </div>
+          <div className="row2">
+            <div className="field"><input type="password" placeholder="Password" /></div>
+            <div className="field"><input type="password" placeholder="Confirm password" /></div>
+          </div>
 
-        <input className={styles.input} placeholder="Promo code" value={form.promo} onChange={e=>up('promo',e.target.value)} />
+          <div className="field"><input placeholder="Promo code (optional)" /></div>
 
-        <div className={styles.optRow}>
-          <label className={styles.checkRow}>
-            <input type="checkbox" checked={form.agree} onChange={e=>up('agree',e.target.checked)} />
-            <span>I Agree To All <a className={styles.link}>Terms</a> And <a className={styles.link}>Conditions</a></span>
+          <label className="check">
+            <input type="checkbox" defaultChecked />
+            <span>I agree to all <a href="/terms" className="link">Terms</a> and <a href="/conditions" className="link">Conditions</a></span>
           </label>
-        </div>
 
-        {msg && <div className={styles.error}>{msg}</div>}
-        <button className={styles.primaryBtn} type="submit">Create Account</button>
-      </form>
+          <button className="primaryBtn" type="submit">Create Account</button>
+
+          <div className="inlineRow" style={{marginTop:12}}>
+            <span className="muted">Already have an account?</span>
+            <Link href="/auth/login" className="link">Login</Link>
+          </div>
+        </form>
+      </section>
+
+      <style jsx>{styles}</style>
     </main>
   );
 }
+
+const styles = `
+.screen{
+  min-height:100dvh; background:#F6F4FC;
+  display:flex; flex-direction:column; align-items:center;
+}
+.topbar{
+  width:100%; max-width:520px; padding:18px 16px 8px;
+  display:flex; align-items:center; gap:10px;
+}
+.backBtn{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:36px; height:36px; border-radius:10px; background:#e9ecff; color:#2864F8;
+  text-decoration:none; margin-right:4px;
+}
+.card{
+  width:100%; max-width:520px; margin:12px 16px 24px;
+  background:#fff; border-radius:20px; box-shadow:0 10px 30px rgba(16,24,40,.09);
+  padding:22px 16px 20px;
+}
+.title{ font-size:20px; font-weight:800; color:#0f172a; margin:4px 0 4px 4px; }
+.sub{ color:#475467; margin:0 0 10px 4px; }
+.muted{ color:#64748b; }
+
+.form{ width:min(409px, 100%); margin:8px auto 0; }
+.field{
+  width:100%; height:55px; margin:8px 0; background:#fff;
+  border:1px solid #E7EAF3; border-radius:8px; display:flex; align-items:center; padding:0 12px;
+}
+.field input{ width:100%; height:100%; border:0; outline:0; background:transparent; font-size:16px; color:#0f172a; }
+.row2{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.inlineRow{ display:flex; justify-content:space-between; align-items:center; gap:8px; }
+
+/* Checkbox */
+.check{ display:flex; gap:10px; align-items:center; margin:6px 2px 2px; font-size:14px; color:#334155; }
+.check input{ width:18px; height:18px; }
+
+/* Primary button 409x55 */
+.primaryBtn{
+  width:min(409px, 100%); height:55px; margin:10px auto 0;
+  background:#2864F8; color:#fff; border:0; border-radius:12px; font-weight:700; letter-spacing:.2px;
+  display:flex; align-items:center; justify-content:center; text-decoration:none; cursor:pointer;
+  box-shadow:0 6px 18px rgba(40,100,248,.25);
+}
+
+.link{ color:#2864F8; text-decoration:none; font-weight:600; }
+
+@media (max-width:380px){ .row2{ grid-template-columns:1fr; } }
+`;
+
 
 

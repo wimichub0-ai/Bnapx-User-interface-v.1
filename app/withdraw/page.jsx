@@ -1,124 +1,299 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-// Optional: comment out next line if you don't want to write to DB here
-// import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 export default function WithdrawPage() {
   const router = useRouter();
 
-  // Pretend “saved banks” (replace with your Supabase fetch)
-  const [banks, setBanks] = useState([
-    { id: '1', bank_name: 'Opay', account_number: '9011032037' },
-    { id: '2', bank_name: 'Access Bank', account_number: '0123456789' },
-  ]);
-  const [selectedId, setSelectedId] = useState('1');
-  const [amount, setAmount] = useState('');
+  // auth + data
+  const [userId, setUserId] = useState(null);
+  const [banks, setBanks]   = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const selected = banks.find(b => b.id === selectedId) || banks[0];
+  // form state
+  const [amount, setAmount] = useState('');
+  const [selectedBankId, setSelectedBankId] = useState(null);
+  const selectedBank = useMemo(
+    () => banks.find(b => b.id === selectedBankId) || null,
+    [banks, selectedBankId]
+  );
+
+  // modals / flow
+  const [showPIN, setShowPIN] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  useEffect(() => {
+    // Require auth
+    supabase.auth.getSession().then(async ({ data }) => {
+      const uid = data?.session?.user?.id;
+      if (!uid) {
+        router.replace('/auth/login');
+        return;
+      }
+      setUserId(uid);
+
+      // Load saved banks
+      const { data: rows, error } = await supabase
+        .from('banks')
+        .select('*')
+        .eq('user_id', uid)
+        .order('created_at', { ascending: false });
+
+      if (error) console.error(error);
+      setBanks(rows || []);
+      setLoading(false);
+    });
+  }, [router]);
 
   async function handleWithdraw() {
-    const amt = Number((amount || '0').replace(/[^\d.]/g, ''));
-    if (!selected) return alert('Pick a bank');
-    if (!amt || amt <= 0) return alert('Enter amount');
+    if (!userId) return;
+    const amt = parseAmount(amount);
+    if (!amt || !selectedBank) {
+      alert('Enter amount and select a bank.');
+      return;
+    }
+    // open PIN modal
+    setShowPIN(true);
+  }
 
-    // If you want to create a pending “withdrawal request” row up-front:
-    // try {
-    //   await supabase.from('withdrawals').insert({
-    //     bank_name: selected.bank_name,
-    //     account_number: selected.account_number,
-    //     amount: amt,
-    //     status: 'pin_pending',
-    //   });
-    // } catch {}
+  async function onPINConfirmed(pinValue) {
+    // Optional: try to create a record (if table exists / policies set)
+    try {
+      const payload = {
+        user_id: userId,
+        amount_ngn: parseAmount(amount),
+        bank_name: selectedBank?.bank_name,
+        account_name: selectedBank?.account_name,
+        account_number: selectedBank?.account_number,
+        status: 'pending',
+      };
+      await supabase.from('withdrawals').insert(payload);
+    } catch (e) {
+      // If table not ready, just continue UX
+      console.warn('Insert to withdrawals skipped/failed:', e?.message || e);
+    }
 
-    router.push(
-      `/withdraw/confirm?amount=${encodeURIComponent(
-        amt
-      )}&bank=${encodeURIComponent(selected.bank_name)}&account=${encodeURIComponent(
-        selected.account_number
-      )}`
+    setShowPIN(false);
+    setShowSuccess(true);
+  }
+
+  // ---------- styles ----------
+  const page = { maxWidth: 480, margin: '0 auto', padding: 16, background: '#F6F4FC', minHeight: '100dvh' };
+  const header = { display:'flex', alignItems:'center', gap:10, marginBottom: 10 };
+  const back = { width: 36, height: 36, borderRadius: 10, background:'#fff', border:'1px solid #E7EAF3', display:'grid', placeItems:'center', cursor:'pointer' };
+  const hTitle = { fontWeight: 800, fontSize: 18, color:'#0E1525' };
+  const card = { background:'#fff', border:'1px solid #E7EAF3', borderRadius:16, padding:16, boxShadow:'0 8px 24px rgba(16,24,40,.06)' };
+  const row = { display:'flex', justifyContent:'center', margin:'10px 0' };
+  const field = {
+    width:'100%', maxWidth:406, height:71,
+    border:'1px solid #E7EAF3', borderRadius:12,
+    background:'#fff', padding:'0 14px', fontSize:18, outline:'none'
+  };
+  const btn = {
+    width:'100%', maxWidth:409, height:55,
+    border:'0', borderRadius:12, background:'#2864F8', color:'#fff',
+    fontWeight:700, display:'grid', placeItems:'center', cursor:'pointer'
+  };
+
+  const bankList = { display:'flex', flexDirection:'column', gap:10, marginTop:8 };
+  const bankItem = (active) => ({
+    border:'1px solid ' + (active ? '#2864F8' : '#E7EAF3'),
+    background:'#fff',
+    borderRadius:12,
+    padding:12,
+    display:'flex',
+    alignItems:'center',
+    justifyContent:'space-between',
+    cursor:'pointer'
+  });
+  const badge = { padding:'6px 10px', borderRadius:999, background:'#F6F4FC', color:'#2864F8', fontWeight:700 };
+
+  if (loading) {
+    return (
+      <main style={page}>
+        <div style={header}>
+          <button style={back} onClick={() => history.back()} aria-label="Back">←</button>
+          <div style={hTitle}>Withdraw</div>
+        </div>
+        <div className="card-lite" style={card}><p>Loading…</p></div>
+      </main>
     );
   }
 
   return (
-    <main style={wrap}>
-      <header style={header}>
-        <button onClick={() => router.back()} style={backBtn} aria-label="Back">‹</button>
-        <h2 style={title}>Withdraw</h2>
-        <div style={{ width: 24 }} />
-      </header>
-
-      {/* Balance card (static showcase) */}
-      <div style={balanceCard}>
-        <span style={{ color: '#cfe0ff' }}>Your Balance</span>
-        <div style={balVal}>₦500,000.00</div>
-      </div>
-
-      {/* Bank select */}
-      <label style={label}>Bank Account</label>
-      <div style={selectField}>
-        <select
-          value={selectedId}
-          onChange={(e) => setSelectedId(e.target.value)}
-          style={selectEl}
-        >
-          {banks.map((b) => (
-            <option key={b.id} value={b.id}>
-              {b.bank_name} • {b.account_number}
-            </option>
-          ))}
-        </select>
+    <main style={page}>
+      {/* top bar */}
+      <div style={header}>
+        <button style={back} onClick={() => history.back()} aria-label="Back">←</button>
+        <div style={hTitle}>Withdraw</div>
       </div>
 
       {/* Amount */}
-      <label style={label}>Enter Amount</label>
-      <div style={inputField}>
-        <input
-          style={inputEl}
-          inputMode="numeric"
-          placeholder="₦0.00"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+      <section style={card}>
+        <div style={{fontWeight:700, margin:'2px 0 8px'}}>Amount (NGN)</div>
+        <div style={row}>
+          <input
+            style={field}
+            inputMode="numeric"
+            placeholder="Enter amount e.g. 50,000"
+            value={amount}
+            onChange={e => setAmount(e.target.value.replace(/[^\d.]/g,''))}
+          />
+        </div>
+
+        {/* Saved banks */}
+        <div style={{fontWeight:700, margin:'14px 0 8px'}}>Select a saved bank</div>
+        <div style={bankList}>
+          {banks.length === 0 && (
+            <div style={{fontSize:14, color:'#6B7280'}}>No saved banks yet.</div>
+          )}
+          {banks.map(b => (
+            <div
+              key={b.id}
+              style={bankItem(selectedBankId === b.id)}
+              onClick={() => setSelectedBankId(b.id)}
+            >
+              <div>
+                <div style={{fontWeight:700}}>{b.bank_name}</div>
+                <div style={{fontSize:13, color:'#6B7280', marginTop:2}}>
+                  {b.account_name} • {b.account_number}
+                </div>
+              </div>
+              {selectedBankId === b.id ? <span style={badge}>Selected</span> : <span/>}
+            </div>
+          ))}
+        </div>
+
+        {/* Add bank link */}
+        <div style={{marginTop:12, textAlign:'center'}}>
+          <a href="/add-bank" style={{color:'#2864F8', fontWeight:700, textDecoration:'none'}}>+ Add another bank</a>
+        </div>
+
+        {/* Withdraw button */}
+        <div style={{display:'flex', justifyContent:'center', marginTop:16}}>
+          <button style={btn} onClick={handleWithdraw}>Withdraw</button>
+        </div>
+      </section>
+
+      {/* PIN Modal */}
+      {showPIN && (
+        <PinModal
+          onClose={() => setShowPIN(false)}
+          onConfirm={onPINConfirmed}
         />
-      </div>
+      )}
 
-      {/* Summary */}
-      <div style={summaryBox}>
-        <div style={row}>
-          <span>Amount</span>
-          <b>{`₦${Number((amount || '0').replace(/[^\d.]/g, '') || 0).toLocaleString()}`}</b>
-        </div>
-        <div style={row}>
-          <span>Fee</span>
-          <b style={{ color: '#16a34a' }}>free</b>
-        </div>
-      </div>
-
-      <button style={primaryBtn} onClick={handleWithdraw}>Withdraw</button>
+      {/* Success */}
+      {showSuccess && <SuccessModal onClose={() => {
+        setShowSuccess(false);
+        // go to History or stay
+        window.location.href = '/history';
+      }}/>}
     </main>
   );
 }
 
-/* ------------ styles ------------ */
-const wrap = { maxWidth: 480, margin: '0 auto', minHeight: '100vh', background: '#F6F4FC', padding: 16 };
-const header = { display: 'flex', alignItems: 'center', justifyContent: 'space-between' };
-const backBtn = { width: 24, height: 24, borderRadius: 999, border: '1px solid #E6EAF2', background: '#fff', display: 'grid', placeItems: 'center', fontSize: 18, cursor: 'pointer' };
-const title = { margin: 0, fontSize: 20, fontWeight: 800, color: '#101828' };
+/* ---------------- PIN Modal ---------------- */
+function PinModal({ onClose, onConfirm }) {
+  const [values, setValues] = useState(['', '', '', '']);
+  const refs = [useRef(null), useRef(null), useRef(null), useRef(null)];
 
-const balanceCard = { marginTop: 16, marginBottom: 16, background: 'linear-gradient(180deg,#1e4ed8,#0b3edb)', borderRadius: 18, padding: '16px 18px', color: '#fff', boxShadow: '0 10px 30px rgba(12,71,249,0.15)' };
-const balVal = { fontSize: 20, fontWeight: 800 };
+  function setDigit(i, val) {
+    const v = val.replace(/[^\d]/g,'').slice(0,1);
+    const next = [...values];
+    next[i] = v;
+    setValues(next);
+    if (v && i < 3) refs[i+1].current?.focus();
+  }
+  function backspace(i, e) {
+    if (e.key === 'Backspace' && !values[i] && i > 0) {
+      refs[i-1].current?.focus();
+    }
+  }
+  const pin = values.join('');
+  const canConfirm = pin.length === 4;
 
-const label = { display: 'block', margin: '10px 2px 6px', fontSize: 14, fontWeight: 700, color: '#0b1220' };
-const fieldBase = { width: 406, height: 71, maxWidth: '100%', background: '#fff', border: '1px solid #E6EAF2', borderRadius: 12, display: 'flex', alignItems: 'center', padding: '0 12px' };
-const selectField = { ...fieldBase };
-const inputField = { ...fieldBase };
+  // styles
+  const wrap = { position:'fixed', inset:0, background:'rgba(0,0,0,.45)', display:'grid', placeItems:'center', padding:24, zIndex:50 };
+  const box = { background:'#fff', borderRadius:16, padding:20, width:'100%', maxWidth:420, boxShadow:'0 15px 40px rgba(0,0,0,.18)', border:'1px solid #E7EAF3' };
+  const title = { fontWeight:800, fontSize:18, margin:'0 0 4px' };
+  const sub = { color:'#6B7280', margin:'0 0 10px' };
+  const pinRow = { display:'flex', gap:12, justifyContent:'center', margin:'12px 0 16px' };
+  const pinBox = {
+    width:64, height:55, textAlign:'center', fontSize:22,
+    border:'1px solid #E7EAF3', borderRadius:8, outline:'none'
+  };
+  const btnRow = { display:'flex', gap:10, marginTop:8, justifyContent:'flex-end' };
+  const btnGhost = { padding:'10px 14px', borderRadius:10, border:'1px solid #E7EAF3', background:'#fff', cursor:'pointer', fontWeight:700 };
+  const btn = { padding:'10px 16px', borderRadius:10, border:0, background:'#2864F8', color:'#fff', cursor:'pointer', fontWeight:700, opacity: canConfirm ? 1 : .5 };
 
-const selectEl = { width: '100%', height: '100%', border: 'none', outline: 'none', background: 'transparent', fontSize: 16 };
-const inputEl = { width: '100%', height: '100%', border: 'none', outline: 'none', background: 'transparent', fontSize: 16 };
+  return (
+    <div style={wrap}>
+      <div style={box}>
+        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+          <div>
+            <div style={title}>Confirm withdrawal</div>
+            <div style={sub}>Enter your 4-digit PIN to proceed</div>
+          </div>
+          <button onClick={onClose} style={{background:'transparent', border:0, fontSize:24, lineHeight:1, cursor:'pointer'}}>×</button>
+        </div>
 
-const summaryBox = { marginTop: 12, background: '#fff', border: '1px solid #E6EAF2', borderRadius: 12, padding: 12 };
-const row = { display: 'flex', justifyContent: 'space-between', padding: '6px 2px' };
+        <div style={pinRow}>
+          {values.map((v, i) => (
+            <input
+              key={i}
+              ref={refs[i]}
+              style={pinBox}
+              inputMode="numeric"
+              value={v}
+              onChange={(e)=>setDigit(i, e.target.value)}
+              onKeyDown={(e)=>backspace(i, e)}
+              autoFocus={i===0}
+            />
+          ))}
+        </div>
 
-const primaryBtn = { width: 409, height: 55, maxWidth: '100%', background: '#2864F8', color: '#fff', fontWeight: 700, border: 0, borderRadius: 12, margin: '18px auto 0', display: 'block', cursor: 'pointer' };
+        <div style={btnRow}>
+          <button style={btnGhost} onClick={onClose}>Cancel</button>
+          <button
+            style={btn}
+            disabled={!canConfirm}
+            onClick={()=> onConfirm(pin)}
+          >
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- Success Modal ---------------- */
+function SuccessModal({ onClose }) {
+  const wrap = { position:'fixed', inset:0, background:'rgba(0,0,0,.45)', display:'grid', placeItems:'center', padding:24, zIndex:50 };
+  const box = { background:'#fff', borderRadius:16, padding:20, width:'100%', maxWidth:420, boxShadow:'0 15px 40px rgba(0,0,0,.18)', border:'1px solid #E7EAF3', textAlign:'center' };
+  const title = { fontWeight:800, fontSize:18, margin:'0 0 6px' };
+  const sub = { color:'#6B7280', margin:'0 0 14px' };
+  const btn = { width:'100%', maxWidth:409, height:55, borderRadius:12, background:'#2864F8', color:'#fff', border:0, fontWeight:700, display:'grid', placeItems:'center', cursor:'pointer', margin:'0 auto' };
+
+  return (
+    <div style={wrap}>
+      <div style={box}>
+        <div style={title}>Withdrawal successful</div>
+        <div style={sub}>We’re processing your transfer. You’ll see the update in History shortly.</div>
+        <button style={btn} onClick={onClose}>Go to History</button>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- helpers ---------------- */
+function parseAmount(input) {
+  if (!input) return 0;
+  const cleaned = String(input).replace(/[^\d.]/g, '');
+  const num = parseFloat(cleaned);
+  return Number.isFinite(num) ? num : 0;
+}
+

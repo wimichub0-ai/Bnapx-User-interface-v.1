@@ -1,16 +1,16 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabaseClient';
 
-/* --------- Rates (NGN per 1 USD-equivalent) ---------
-   Users type USD; we show NGN = USD * rate, and the
-   estimated crypto received/sent (1:1 for USDT/USDC demo). */
+/* --------- Rates (NGN per 1 USD-equivalent) --------- */
 const RATES = {
   'USDT-TRC20': 1785,
   'USDT-ERC20': 1795,
   'USDT-BEP20': 1780,
   'USDC-ERC20': 1790,
-  'BTC':        1785, // prototype: treat as $-pegged calc for display
+  'BTC':        1785, // prototype calc
 };
 
 const NETWORKS = [
@@ -55,6 +55,9 @@ function ngnFromUsd(usd, networkCode) {
   const rate = RATES[networkCode];
   if (!rate || rate <= 0) return 0;
   return usd * rate;
+}
+function randomRef(prefix='BNX') {
+  return `${prefix}-${Math.random().toString(36).slice(2,8).toUpperCase()}`;
 }
 
 /* ================= Page ================= */
@@ -108,16 +111,17 @@ export default function TradePage() {
 
 /* ---------------- SELL ---------------- */
 function SellCard(){
+  const router = useRouter();
   const [network, setNetwork] = useState('USDT-TRC20');
-  const [usd, setUsd] = useState('');            // USD typed by user
+  const [usd, setUsd] = useState('');
   const [copied, setCopied] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const asset = useMemo(() => NETWORKS.find(n => n.code === network)?.asset || 'USDT', [network]);
   const usdValue = parseUSD(usd);
   const naira = useMemo(() => ngnFromUsd(usdValue, network), [usdValue, network]);
-  // For demo we assume crypto amount equals USD amount (USDT/USDC). For BTC, treat as $ conversion demo:
-  const estCrypto = asset === 'BTC' ? usdValue / 100000 : usdValue; // placeholder; replace later with real price
+  const estCrypto = asset === 'BTC' ? usdValue / 100000 : usdValue; // placeholder demo
 
   async function copyAddr(){
     try {
@@ -125,6 +129,42 @@ function SellCard(){
       setCopied(true);
       setTimeout(()=>setCopied(false), 1200);
     } catch {}
+  }
+
+  async function insertTrade() {
+    setSaving(true);
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const user = auth?.user;
+      if (!user) {
+        alert('Please login first'); 
+        router.push('/auth/login'); 
+        return;
+      }
+      const tx_ref = randomRef('SELL');
+      const { error } = await supabase.from('trades').insert([
+        {
+          user_id: user.id,
+          type: 'sell',
+          asset,
+          network_code: network,
+          usd_amount: usdValue,
+          ngn_amount: naira,
+          to_address: null,
+          status: 'pending',
+          tx_ref,
+        },
+      ]);
+      if (error) {
+        console.error(error);
+        alert('Could not create trade. Check console / Supabase RLS.');
+        return;
+      }
+      alert('Trade marked Pending. You can see it on History.');
+      router.push('/history');
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -136,7 +176,7 @@ function SellCard(){
 
       <div className="row2">
         <div className="cell">
-          <div className="label">Crypto Coin </div>
+          <div className="label">Network</div>
           <div className="field">
             <select value={network} onChange={e=>setNetwork(e.target.value)}>
               {NETWORKS.map(n => <option key={n.code} value={n.code}>{n.label}</option>)}
@@ -167,7 +207,9 @@ function SellCard(){
         </div>
       </div>
 
-      <button className="primaryBtn" onClick={()=>setConfirmOpen(true)}>I have sent</button>
+      <button className="primaryBtn" disabled={saving} onClick={()=>setConfirmOpen(true)}>
+        {saving ? 'Saving…' : 'I have sent'}
+      </button>
       <div className="footNote">We’ll verify on-chain and update your status to <b>Pending</b> when confirmed.</div>
 
       {confirmOpen && (
@@ -175,7 +217,7 @@ function SellCard(){
           title="Confirm transfer"
           desc={`You’re confirming a transfer on ${network}. We’ll mark this trade as Pending and notify you when it’s confirmed.`}
           onClose={()=>setConfirmOpen(false)}
-          onConfirm={()=>{ setConfirmOpen(false); alert('Marked as Pending (prototype)'); }}
+          onConfirm={()=>{ setConfirmOpen(false); insertTrade(); }}
         />
       )}
 
@@ -186,23 +228,55 @@ function SellCard(){
 
 /* ---------------- BUY ---------------- */
 function BuyCard(){
+  const router = useRouter();
   const [network, setNetwork] = useState('USDT-TRC20');
-  const [usd, setUsd] = useState('');            // USD typed by user
+  const [usd, setUsd] = useState('');
   const [toAddr, setToAddr] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const asset = useMemo(() => NETWORKS.find(n => n.code === network)?.asset || 'USDT', [network]);
   const usdValue = parseUSD(usd);
   const naira = useMemo(() => ngnFromUsd(usdValue, network), [usdValue, network]);
-  const estReceive = asset === 'BTC' ? usdValue / 100000 : usdValue; // placeholder until live price
+  const estReceive = asset === 'BTC' ? usdValue / 100000 : usdValue; // placeholder
 
-  function createOrder(){
-    alert(
-      `Buy request (prototype)\n` +
-      `Network: ${network}\n` +
-      `Pay: ${formatUSD(usdValue)} ≈ ${formatNaira(naira)}\n` +
-      `Receive: ${formatCrypto(estReceive, asset)}\n` +
-      `To: ${toAddr || '(no address)'}`
-    );
+  async function createOrder(){
+    setSaving(true);
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const user = auth?.user;
+      if (!user) {
+        alert('Please login first');
+        router.push('/auth/login');
+        return;
+      }
+      if (!toAddr.trim()) {
+        alert('Please enter a wallet address to receive.');
+        return;
+      }
+      const tx_ref = randomRef('BUY');
+      const { error } = await supabase.from('trades').insert([
+        {
+          user_id: user.id,
+          type: 'buy',
+          asset,
+          network_code: network,
+          usd_amount: usdValue,
+          ngn_amount: naira,
+          to_address: toAddr.trim(),
+          status: 'pending',
+          tx_ref,
+        },
+      ]);
+      if (error) {
+        console.error(error);
+        alert('Could not create trade. Check console / Supabase RLS.');
+        return;
+      }
+      alert('Buy order created as Pending. See History.');
+      router.push('/history');
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -214,7 +288,7 @@ function BuyCard(){
 
       <div className="row2">
         <div className="cell">
-          <div className="label">Crypto Coin </div>
+          <div className="label">Network</div>
           <div className="field">
             <select value={network} onChange={e=>setNetwork(e.target.value)}>
               {NETWORKS.map(n => <option key={n.code} value={n.code}>{n.label}</option>)}
@@ -248,7 +322,9 @@ function BuyCard(){
         </div>
       </div>
 
-      <button className="primaryBtn" onClick={createOrder}>Paid Now</button>
+      <button className="primaryBtn" disabled={saving} onClick={createOrder}>
+        {saving ? 'Saving…' : 'Create Test Payment'}
+      </button>
       <div className="footNote">We’ll send the crypto to the address above once payment is confirmed.</div>
 
       <style jsx>{baseCardCss}</style>
@@ -264,8 +340,7 @@ function GiftcardCard(){
         <div className="cardTitle">Sell Giftcard</div>
         <span className="chip">Coming soon</span>
       </div>
-      <div className="hint">Hi buddy we will notify you when this feature is active.</div>
-
+      <div className="hint">UI will match your giftcard flow with logos, categories, and rates.</div>
       <style jsx>{baseCardCss}</style>
     </section>
   );
@@ -338,7 +413,6 @@ const baseCardCss = `
   .row2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px; }
   @media (max-width:560px){ .row2{ grid-template-columns:1fr; } }
 
-  .cell{}
   .label{ font-size:12px; font-weight:700; color:#0f172a; margin:6px 0; }
   .field{
     width:min(409px, 100%); height:55px;

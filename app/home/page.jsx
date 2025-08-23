@@ -1,85 +1,109 @@
-// app/home/page.jsx
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
 import Image from 'next/image';
 import Link from 'next/link';
-import TabBar from '@/components/TabBar';
-import styles from './home.module.css';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const router = useRouter();
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) router.replace('/auth/login');
-    });
-  }, [router]);
+  // quick inline styles (mobile-first, max width 480)
+  const wrap = {
+    maxWidth: 480, margin: '0 auto', padding: 16,
+    background: '#F6F4FC', minHeight: '100dvh'
+  };
+  const card = {
+    background: 'linear-gradient(180deg, #2864F8 0%, #184BEA 100%)',
+    borderRadius: 16, padding: 16, color: '#fff',
+    boxShadow: '0 10px 28px rgba(40,100,248,.25)'
+  };
+  const balanceHead = { display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 14 };
+  const actionsRow = { display:'flex', gap: 12, marginTop: 8 };
+
+  // shared primary button (409×55 when space allows)
+  const primaryBtn = {
+    flex: 1, height: 55, maxWidth: 409, borderRadius: 12,
+    background: '#2864F8', color:'#fff', border:0, fontWeight:700,
+    display:'grid', placeItems:'center', cursor:'pointer'
+  };
 
   return (
-    <main className={styles.wrap}>
-      {/* Top brand header */}
-      <section className={styles.brand}>
-        <div className={styles.brandRow}>
-          <div className={styles.user}>
-            <Image src="/avatar.jpg" alt="avatar" width={40} height={40} className={styles.avatar}/>
-            <div>
-              <div className={styles.hi}>Hi Michael muta</div>
-              <div className={styles.sub}>What are you trading today?</div>
-            </div>
-          </div>
-          <Image src="/icons/bell.png" alt="bell" width={20} height={20}/>
-        </div>
+    <main style={wrap}>
+      {/* tiny header */}
+      <div style={{display:'flex', alignItems:'center', gap:10, marginBottom:12}}>
+        <Image src="/logo.svg" alt="BnapX" width={28} height={28}/>
+        <div style={{fontWeight:800, color:'#0E1525'}}>Hi Michael</div>
+      </div>
 
-        {/* Wallet card */}
-        <div className={styles.wallet}>
-          <div className={styles.walletHead}>
-            <span>Wallet Balance</span>
-            <span className={styles.balance}>₦500,000.00</span>
-          </div>
-          <div className={styles.walletActions}>
-            <button className={styles.actionBtn}><span className={styles.plus}>＋</span><span>Add Bank</span></button>
-            <button className={styles.actionBtn}><span className={styles.download}>⤓</span><span>Withdraw</span></button>
-          </div>
+      {/* Wallet card */}
+      <section style={card}>
+        <div style={balanceHead}>
+          <span style={{opacity:.9}}>Wallet Balance</span>
+          <Image src="/bell.svg" alt="" width={18} height={18}/>
+        </div>
+        <div style={{fontWeight:800, fontSize:22}}>₦500,000.00</div>
+
+        <div style={actionsRow}>
+          <button style={primaryBtn} onClick={() => router.push('/add-bank')}>
+            Add Bank
+          </button>
+          <button style={primaryBtn} onClick={() => router.push('/withdraw')}>
+            Withdraw
+          </button>
         </div>
       </section>
 
-      {/* Quick action */}
-      <section className={styles.section}>
-        <h3 className={styles.title}>Quick action</h3>
-        <div className={styles.grid}>
-          <Link href="/trade?tab=sell" className={`${styles.tile} ${styles.blueTile}`}>
-            <Image src="/icons/usdt.png" alt="USDT" width={56} height={56}/>
+      {/* Quick actions */}
+      <section style={{marginTop:18}}>
+        <h3 style={{margin:'0 0 10px', color:'#0E1525'}}>Quick action</h3>
+        <div style={{
+          display:'grid', gridTemplateColumns:'1fr 1fr', gap:12
+        }}>
+          <Link href="/trade?tab=sell" style={tile('#e8f0ff')}>
+            <Image src="/icons/usdt.png" alt="" width={56} height={56}/>
             <span>Sell Crypto</span>
           </Link>
-          <Link href="/trade?tab=buy" className={`${styles.tile} ${styles.cyanTile}`}>
-            <Image src="/icons/btc.png" alt="BTC" width={56} height={56}/>
+          <Link href="/trade?tab=buy" style={tile('#e6f8ff')}>
+            <Image src="/icons/btc.png" alt="" width={56} height={56}/>
             <span>Buy Crypto</span>
           </Link>
-          <Link href="/trade?tab=giftcard" className={`${styles.tile} ${styles.lilacTile}`}>
-            <Image src="/icons/itunes.png" alt="iTunes" width={56} height={56}/>
+          <Link href="/trade?tab=giftcard" style={tile('#efeaff')}>
+            <Image src="/icons/itunes.png" alt="" width={56} height={56}/>
             <span>Sell Giftcard</span>
           </Link>
-          <div className={`${styles.tile} ${styles.purpleTile}`}>
-            <Image src="/icons/gift.png" alt="Gift" width={56} height={56}/>
-            <span>Coming soon{"\n"}Send Gift</span>
+          <div style={tile('#ece6ff')}>
+            <Image src="/icons/gift.png" alt="" width={56} height={56}/>
+            <span>Send Gift (soon)</span>
           </div>
         </div>
       </section>
 
-      {/* Promo/Ad */}
-      <section className={styles.section}>
-        <h3 className={styles.title}>Promo/Ad</h3>
-        <div className={styles.promo}>
-          <Image src="/banners/promo1.jpg" alt="Promo" fill className={styles.promoImg}/>
+      {/* Promo banner (optional) */}
+      <section style={{marginTop:18}}>
+        <div style={{
+          position:'relative', width:'100%', height:120,
+          borderRadius:16, overflow:'hidden', boxShadow:'0 8px 22px rgba(16,24,40,.12)'
+        }}>
+          <Image src="/promo1.jpg" alt="Promo" fill style={{objectFit:'cover'}}/>
         </div>
       </section>
-
-      <TabBar active="home" />
     </main>
   );
+}
+
+function tile(bg) {
+  return {
+    background: bg,
+    borderRadius: 16,
+    padding: 14,
+    display: 'grid',
+    placeItems: 'center',
+    textAlign: 'center',
+    textDecoration: 'none',
+    color: '#0E1525',
+    fontWeight: 700,
+    boxShadow: '0 6px 18px rgba(2,22,80,.05)'
+  };
 }
 
 

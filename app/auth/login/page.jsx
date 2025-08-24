@@ -51,6 +51,14 @@ export default function LoginPage(){
             onChange={e=>setPass(e.target.value)}
             required
           />
+          <button
+              type="button"
+              className="eye"
+              onClick={()=>setShow(s=>!s)}
+              aria-label={show ? 'Hide password' : 'Show password'}
+            >
+              {show ? '🙈' : '👁️'}
+            </button>
 
           {err && <div className="err">{err}</div>}
 

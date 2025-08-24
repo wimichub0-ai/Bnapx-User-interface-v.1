@@ -1,4 +1,6 @@
 'use client';
+export const dynamic = 'force-dynamic';
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -8,6 +10,7 @@ export default function LoginPage(){
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPass] = useState('');
+  const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
 
@@ -41,27 +44,22 @@ export default function LoginPage(){
             onChange={e=>setEmail(e.target.value)}
             required
           />
-       
-          <div className="field has-eye">
+
           <label>Password</label>
-          <input
-            className="txt"
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={e=>setPass(e.target.value)}
-            required
-          />
-          <button
-              type="button"
-              className="eye"
-              onClick={()=>setShow(s=>!s)}
-              aria-label={show ? 'Hide password' : 'Show password'}
-            >
-              {show ? '🙈' : '👁️'}
+          <div className="field">
+            <input
+              className="txt txt--noBorder"
+              type={showPass ? 'text' : 'password'}
+              placeholder="••••••••"
+              value={password}
+              onChange={e=>setPass(e.target.value)}
+              required
+            />
+            <button type="button" className="toggle" onClick={()=>setShowPass(v=>!v)}>
+              {showPass ? 'Hide' : 'Show'}
             </button>
-           </div>
-         
+          </div>
+
           {err && <div className="err">{err}</div>}
 
           <button className="btn primary" disabled={loading}>
@@ -83,9 +81,15 @@ export default function LoginPage(){
         .sub{ color:#475467; margin-bottom:14px; }
         .form{ display:grid; gap:10px; }
         label{ font-weight:700; color:#0F172A; }
+        .field{
+          display:flex; align-items:center; width:409px; height:55px; border:1px solid #E7EAF3; border-radius:12px; background:#fff; padding:0 8px 0 0;
+        }
         .txt{
-          width:409px; height:55px; border:1px solid #E7EAF3; border-radius:12px;
-          padding:0 14px; background:#fff; font-size:16px;
+          width:409px; height:55px; border:1px solid #E7EAF3; border-radius:12px; padding:0 14px; background:#fff; font-size:16px;
+        }
+        .txt--noBorder{ border:0; border-radius:12px 0 0 12px; flex:1; }
+        .toggle{
+          background:transparent; border:0; padding:0 12px; font-weight:700; color:#2864F8; cursor:pointer; height:55px; border-left:1px solid #E7EAF3;
         }
         .btn{
           width:409px; height:55px; border-radius:12px; border:0; font-weight:800;
@@ -95,10 +99,9 @@ export default function LoginPage(){
         .alt{ margin-top:10px; color:#475467; }
         .alt a{ color:#2864F8; font-weight:700; text-decoration:none; }
         @media (max-width:430px){
-          .txt,.btn{ width:100%; max-width:409px; }
+          .txt,.btn,.field{ width:100%; max-width:409px; }
         }
       `}</style>
     </main>
   );
 }
-

@@ -28,23 +28,38 @@ export default function AuthLanding() {
           padding:24px 16px;
         }
         .hrow{
-          width:100%; max-width:520px; display:flex; align-items:center;
+          width:100%; max-width:520px; display:flex; align-items:center; justify-content:center;
         }
         .logo{ width:120px; height:auto; }
+
         .card{
           width:100%; max-width:520px; display:flex; flex-direction:column;
-          align-items:center; text-align:center; margin-top:24px;
+          align-items:center; text-align:center;
+          margin-top:12px; /* ⬅️ reduced so logo shows clearly */
         }
+
         .illus{ width:365px; height:365px; object-fit:contain; }
         .h2{ font-size:18px; font-weight:800; letter-spacing:.6px; margin:6px 0 6px; color:#101828; }
         .p{ color:#475467; max-width:420px; }
+
         .actions{ display:grid; gap:12px; margin-top:16px; }
-        .btn{
-          width:409px; height:55px; border-radius:12px; display:grid; place-items:center;
-          font-weight:800; text-decoration:none; margin:0 auto;
+
+        /* 🔽 Button styles */
+        .btn,
+        .btn:link,
+        .btn:visited,
+        .btn:hover,
+        .btn:active {
+          width:409px; height:55px;
+          border-radius:12px;
+          display:flex; align-items:center; justify-content:center;
+          font-weight:800; text-decoration:none !important;
+          margin:0 auto;
         }
+
         .primary{ background:#2864F8; color:#fff; }
         .secondary{ background:#fff; color:#2864F8; border:1px solid #C7D2FE; }
+
         @media (max-width:430px){
           .btn{ width:100%; max-width:409px; }
           .illus{ width:100%; max-width:365px; height:auto; }
@@ -53,3 +68,4 @@ export default function AuthLanding() {
     </main>
   );
 }
+

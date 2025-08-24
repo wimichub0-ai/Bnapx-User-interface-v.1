@@ -31,7 +31,7 @@ export default function LoginPage(){
       </header>
 
       <section className="card">
-        <h2 className="h2">Welcome back</h2>
+        <h2 className="h2">Welcome back buddy</h2>
         <p className="sub">Login to continue</p>
 
         <form onSubmit={onSubmit} className="form">

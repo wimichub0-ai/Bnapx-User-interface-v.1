@@ -1,110 +1,96 @@
 'use client';
-
-import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import TabBar from '@/components/TabBar';
 
-export default function Home() {
-  const router = useRouter();
-
-  // quick inline styles (mobile-first, max width 480)
-  const wrap = {
-    maxWidth: 480, margin: '0 auto', padding: 16,
-    background: '#F6F4FC', minHeight: '100dvh'
-  };
-  const card = {
-    background: 'linear-gradient(180deg, #2864F8 0%, #184BEA 100%)',
-    borderRadius: 16, padding: 16, color: '#fff',
-    boxShadow: '0 10px 28px rgba(40,100,248,.25)'
-  };
-  const balanceHead = { display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 14 };
-  const actionsRow = { display:'flex', gap: 12, marginTop: 8 };
-
-  // shared primary button (409×55 when space allows)
-  const primaryBtn = {
-    flex: 1, height: 55, maxWidth: 409, borderRadius: 12,
-    background: '#2864F8', color:'#fff', border:0, fontWeight:700,
-    display:'grid', placeItems:'center', cursor:'pointer'
-  };
-
+export default function HomePage(){
   return (
-    <main style={wrap}>
-      {/* tiny header */}
-      <div style={{display:'flex', alignItems:'center', gap:10, marginBottom:12}}>
-        <Image src="/logo.svg" alt="BnapX" width={28} height={28}/>
-        <div style={{fontWeight:800, color:'#0E1525'}}>Hi Michael</div>
-      </div>
-
-      {/* Wallet card */}
-      <section style={card}>
-        <div style={balanceHead}>
-          <span style={{opacity:.9}}>Wallet Balance</span>
-          <Image src="/bell.svg" alt="" width={18} height={18}/>
+    <main className="wrap">
+      {/* Brand header */}
+      <section className="hero">
+        <div className="hero-row">
+          <div className="hello">
+            <div className="h1">Hi there</div>
+            <div className="h2">What are you trading today?</div>
+          </div>
+          <img src="/icons/bell.png" alt="Notifications" className="bell"/>
         </div>
-        <div style={{fontWeight:800, fontSize:22}}>₦500,000.00</div>
 
-        <div style={actionsRow}>
-          <button style={primaryBtn} onClick={() => router.push('/add-bank')}>
-            Add Bank
-          </button>
-          <button style={primaryBtn} onClick={() => router.push('/withdraw')}>
-            Withdraw
-          </button>
-        </div>
-      </section>
-
-      {/* Quick actions */}
-      <section style={{marginTop:18}}>
-        <h3 style={{margin:'0 0 10px', color:'#0E1525'}}>Quick action</h3>
-        <div style={{
-          display:'grid', gridTemplateColumns:'1fr 1fr', gap:12
-        }}>
-          <Link href="/trade?tab=sell" style={tile('#e8f0ff')}>
-            <Image src="/icons/usdt.png" alt="" width={56} height={56}/>
-            <span>Sell Crypto</span>
-          </Link>
-          <Link href="/trade?tab=buy" style={tile('#e6f8ff')}>
-            <Image src="/icons/btc.png" alt="" width={56} height={56}/>
-            <span>Buy Crypto</span>
-          </Link>
-          <Link href="/trade?tab=giftcard" style={tile('#efeaff')}>
-            <Image src="/icons/itunes.png" alt="" width={56} height={56}/>
-            <span>Sell Giftcard</span>
-          </Link>
-          <div style={tile('#ece6ff')}>
-            <Image src="/icons/gift.png" alt="" width={56} height={56}/>
-            <span>Send Gift (soon)</span>
+        {/* Wallet card */}
+        <div className="wallet">
+          <div className="wallet-head">
+            <span>Wallet Balance</span>
+            <span className="balance">₦500,000.00</span>
+          </div>
+          <div className="wallet-actions">
+            {/* Hooked buttons */}
+            <Link href="/bank/add" className="pill"><span>＋</span> Add Bank</Link>
+            <Link href="/withdraw" className="pill"><span>⤓</span> Withdraw</Link>
           </div>
         </div>
       </section>
 
-      {/* Promo banner (optional) */}
-      <section style={{marginTop:18}}>
-        <div style={{
-          position:'relative', width:'100%', height:120,
-          borderRadius:16, overflow:'hidden', boxShadow:'0 8px 22px rgba(16,24,40,.12)'
-        }}>
-          <Image src="/promo1.jpg" alt="Promo" fill style={{objectFit:'cover'}}/>
+      {/* Quick actions */}
+      <section className="section">
+        <h3 className="title">Quick action</h3>
+        <div className="grid">
+          <Link href="/trade?tab=sell" className="tile blue"><img src="/icons/usdt.png" alt="" /><span>Sell Crypto</span></Link>
+          <Link href="/trade?tab=buy"  className="tile cyan"><img src="/icons/btc.png" alt=""  /><span>Buy Crypto</span></Link>
+          <Link href="/trade?tab=giftcard" className="tile lilac"><img src="/icons/itunes.png" alt="" /><span>Sell Giftcard</span></Link>
+          <div className="tile purple"><img src="/icons/gift.png" alt="" /><span>Send Gift (soon)</span></div>
         </div>
       </section>
+
+      {/* Promo banner */}
+      <section className="section">
+        <h3 className="title">Promo/Ad</h3>
+        <div className="promo">
+          <img src="/banner/promo1.jpg" alt="Promo" />
+        </div>
+      </section>
+
+      <TabBar active="/home" />
+
+      <style jsx>{`
+        .wrap{ min-height:100dvh; background:#fff; padding-bottom:100px; }
+        .hero{
+          background: linear-gradient(180deg, #0C47F9 0%, #2E69FF 100%);
+          color:#fff; padding:24px 16px 84px; border-bottom-left-radius:28px; border-bottom-right-radius:28px;
+        }
+        .hero-row{ display:flex; align-items:center; justify-content:space-between; }
+        .hello .h1{ font-weight:800; font-size:20px; }
+        .hello .h2{ opacity:.9; }
+        .bell{ width:20px; height:20px; }
+
+        .wallet{
+          margin:-46px 16px 8px; background:#fff; border-radius:16px;
+          box-shadow:0 10px 30px rgba(16,24,40,.12); padding:16px; color:#101828;
+        }
+        .wallet-head{ display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #EEF0F6; padding-bottom:10px; margin-bottom:10px; }
+        .balance{ font-weight:800; color:#0C47F9; }
+        .wallet-actions{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+        .pill{
+          background:#F6F4FC; color:#101828; text-decoration:none; border-radius:12px; padding:12px 14px; font-weight:700;
+          display:flex; align-items:center; justify-content:center; gap:8px;
+        }
+
+        .section{ padding:16px; }
+        .title{ font-weight:800; color:#101828; margin:8px 0 12px; }
+        .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+        .tile{
+          background:#fff; border:1px solid #EEF0F6; border-radius:16px; padding:12px;
+          display:flex; flex-direction:column; align-items:center; gap:8px; text-decoration:none;
+          box-shadow:0 6px 18px rgba(16,24,40,.06);
+        }
+        .tile img{ width:56px; height:56px; border-radius:12px; object-fit:cover; }
+        .tile span{ font-weight:700; color:#0C47F9; }
+        .blue{ background:#e8f0ff; } .cyan{ background:#e6f8ff; } .lilac{ background:#efeaff; } .purple{ background:#ece6ff; }
+
+        .promo img{ width:100%; height:auto; border-radius:16px; }
+      `}</style>
     </main>
   );
 }
 
-function tile(bg) {
-  return {
-    background: bg,
-    borderRadius: 16,
-    padding: 14,
-    display: 'grid',
-    placeItems: 'center',
-    textAlign: 'center',
-    textDecoration: 'none',
-    color: '#0E1525',
-    fontWeight: 700,
-    boxShadow: '0 6px 18px rgba(2,22,80,.05)'
-  };
-}
 
 
 

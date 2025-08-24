@@ -50,28 +50,11 @@ export default function HomePage(){
 
       <TabBar active="/home" />
 
-      <style jsx>{`
+            <style jsx>{`
         .wrap{ min-height:100dvh; background:#fff; padding-bottom:100px; }
-        .hero{
-          background: linear-gradient(180deg, #0C47F9 0%, #2E69FF 100%);
-          color:#fff; padding:24px 16px 84px; border-bottom-left-radius:28px; border-bottom-right-radius:28px;
-        }
-        .hero-row{ display:flex; align-items:center; justify-content:space-between; }
-        .hello .h1{ font-weight:800; font-size:20px; }
-        .hello .h2{ opacity:.9; }
-        .bell{ width:20px; height:20px; }
+        .hero{ ... }
 
-        .wallet{
-          margin:-46px 16px 8px; background:#fff; border-radius:16px;
-          box-shadow:0 10px 30px rgba(16,24,40,.12); padding:16px; color:#101828;
-        }
-        .wallet-head{ display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #EEF0F6; padding-bottom:10px; margin-bottom:10px; }
-        .balance{ font-weight:800; color:#0C47F9; }
-        .wallet-actions{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-        .pill{
-          background:#F6F4FC; color:#101828; text-decoration:none; border-radius:12px; padding:12px 14px; font-weight:700;
-          display:flex; align-items:center; justify-content:center; gap:8px;
-        }
+        .wallet{ ... }
 
         .section{ padding:16px; }
         .title{ font-weight:800; color:#101828; margin:8px 0 12px; }
@@ -84,6 +67,15 @@ export default function HomePage(){
         .tile img{ width:56px; height:56px; border-radius:12px; object-fit:cover; }
         .tile span{ font-weight:700; color:#0C47F9; }
         .blue{ background:#e8f0ff; } .cyan{ background:#e6f8ff; } .lilac{ background:#efeaff; } .purple{ background:#ece6ff; }
+
+        /* 👇 Add this to kill underline */
+        .grid .tile,
+        .grid .tile:link,
+        .grid .tile:visited,
+        .grid .tile:hover,
+        .grid .tile:active {
+          text-decoration: none !important;
+        }
 
         .promo img{ width:100%; height:auto; border-radius:16px; }
       `}</style>

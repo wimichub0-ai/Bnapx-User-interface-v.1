@@ -168,7 +168,7 @@ export default function WithdrawPage() {
 
         {/* Add bank link */}
         <div style={{marginTop:12, textAlign:'center'}}>
-          <a href="/add-bank" style={{color:'#2864F8', fontWeight:700, textDecoration:'none'}}>+ Add another bank</a>
+          <a href="/add" style={{color:'#2864F8', fontWeight:700, textDecoration:'none'}}>+ Add another bank</a>
         </div>
 
         {/* Withdraw button */}

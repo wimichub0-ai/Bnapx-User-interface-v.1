@@ -37,8 +37,7 @@ export default function TabBar({ active }) {
             </Link>
           );
         })}
-      </nav>
-
+            </nav>
       <style jsx>{`
         .btabbar{
           position:sticky; bottom:0; left:0; right:0;
@@ -47,10 +46,23 @@ export default function TabBar({ active }) {
           background:#fff; border-top:1px solid #E7EAF3; z-index:10;
           max-width:520px; margin:0 auto;
         }
+
+        /* Remove underline on the link in all states */
+        .btab,
+        .btab:link,
+        .btab:visited,
+        .btab:hover,
+        .btab:active,
+        .btab span {
+          text-decoration: none !important;
+        }
+
         .btab{
           display:flex; flex-direction:column; align-items:center; gap:4px;
-          text-decoration:none; font-size:12px; color:#667085; font-weight:600;
+          font-size:12px; color:#667085; font-weight:600;
+          -webkit-tap-highlight-color: transparent;
         }
+
         .btab img{ width:22px; height:22px; }
         .btab.active{ color:#0C47F9; }
       `}</style>

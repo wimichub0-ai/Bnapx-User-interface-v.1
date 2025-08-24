@@ -41,7 +41,8 @@ export default function LoginPage(){
             onChange={e=>setEmail(e.target.value)}
             required
           />
-
+       
+          <div className="field has-eye">
           <label>Password</label>
           <input
             className="txt"
@@ -59,7 +60,8 @@ export default function LoginPage(){
             >
               {show ? '🙈' : '👁️'}
             </button>
-
+           </div>
+         
           {err && <div className="err">{err}</div>}
 
           <button className="btn primary" disabled={loading}>
